@@ -1,0 +1,42 @@
+{
+  "required": true,
+  "package": "me.rattokens.rataddon.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "BowItemMixin",
+    "ClientLevelMixin",
+    "ClientPacketListenerMixin",
+    "ConnectionMixin",
+	"CorpseGlowMixin",
+    "AvatarRendererMixin",
+    "FocusPlayerNameMixin",
+    "DroppedItemRenderStateMixin",
+    "DroppedItemRendererMixin",
+    "AvatarRenderStateMixin",
+	"EquipmentLayerRendererAlphaMixin",
+	"AbstractSignEditScreenMixin",
+    "GameRendererMixin",
+    "FirstPersonHandsAndItemsMixin",
+    "ItemInHandRendererAnimationMixin",
+    "ItemInHandRendererMixin",
+    "LivingEntityMixin",
+    "LivingEntityRendererAlphaMixin",
+    "LocalPlayerMixin",
+    "MinecraftMixin",
+	"MouseHandlerAutoClickMixin",
+    "KeyMappingAccessor",
+    "LayerRenderStateMixin",
+    "LevelExtractorMixin",
+    "MultiPlayerGameModeMixin",
+	"NoGemstoneDesyncChunkMixin",
+	"NoGemstoneDesyncPaneMixin",
+	"PingOffsetMinerDebugMonitorMixin",
+	"PingOffsetMinerNetworkMixin",
+	"PingOffsetMinerProgressMixin",
+	"SkullBlockRendererAlphaMixin",
+	"StuckInBodyLayerAlphaMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -1,0 +1,52 @@
+# Automatically build the project and run any configured tests for every push
+# and submitted pull request. This can help catch issues that only occur on
+# certain platforms or Java versions, and provides a first line of defence
+# against bad commits.
+
+name: build
+on: [pull_request, push]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v6
+      - name: validate gradle wrapper
+        uses: gradle/actions/wrapper-validation@v6
+      - name: setup jdk
+        uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: 'microsoft'
+      - name: make gradle wrapper executable
+        run: chmod +x ./gradlew
+      - name: build
+        run: ./gradlew build
+      - name: select remapped production jar
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          selected=()
+          for jar in build/libs/*.jar; do
+            name="${jar##*/}"
+            case "$name" in
+              *-sources.jar|*-dev.jar|*-dev-*.jar|*-javadoc.jar) continue ;;
+            esac
+            selected+=("$jar")
+          done
+          if [[ ${#selected[@]} -ne 1 ]]; then
+            echo "Expected exactly one remapped production jar, found ${#selected[@]}:" >&2
+            printf '  %s\n' "${selected[@]:-}" >&2
+            ls -la build/libs/ >&2 || true
+            exit 1
+          fi
+          mkdir -p dist
+          cp "${selected[0]}" dist/
+          echo "Selected ${selected[0]}"
+      - name: upload remapped jar
+        uses: actions/upload-artifact@v7
+        with:
+          name: RatAddons
+          path: dist/
+          if-no-files-found: error

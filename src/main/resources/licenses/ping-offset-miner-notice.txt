@@ -1,0 +1,5 @@
+PingOffsetMiner mining timing, block hardness data, precision mining, and rendering behavior
+adapted from Revvilon/PingOffsetMiner, branch 26.1:
+https://github.com/Revvilon/PingOffsetMiner/tree/26.1
+Original project is CC0-1.0. See ping-offset-miner-CC0-1.0.txt.
+The custom sound and efficiency tracking features are not included.

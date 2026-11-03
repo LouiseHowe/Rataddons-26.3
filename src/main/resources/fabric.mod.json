@@ -1,0 +1,31 @@
+{
+	"schemaVersion": 1,
+	"id": "rataddon",
+	"version": "${version}",
+	"name": "RatAddons",
+	"description": "xiao peng you bie kai gua.",
+	"authors": [
+		"RatTokens"
+	],
+	"license": "GPL-3.0-only",
+	"icon": "assets/rataddon/icon.jpg",
+	"environment": "client",
+	"accessWidener": "rataddon.accesswidener",
+	"entrypoints": {
+		"client": [
+			"me.rattokens.rataddon.RaTAddonClient"
+		]
+	},
+	"mixins": [
+		{
+			"config": "rataddon.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}
