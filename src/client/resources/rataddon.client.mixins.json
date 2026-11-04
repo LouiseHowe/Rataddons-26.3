@@ -25,6 +25,7 @@
     "MinecraftMixin",
 	"MouseHandlerAutoClickMixin",
     "KeyMappingAccessor",
+    "KeyboardInputMixin",
     "LayerRenderStateMixin",
     "LevelExtractorMixin",
     "MultiPlayerGameModeMixin",

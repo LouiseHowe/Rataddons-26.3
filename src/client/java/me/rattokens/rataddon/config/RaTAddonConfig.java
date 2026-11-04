@@ -196,6 +196,8 @@ public final class RaTAddonConfig {
 	public double boneMaxDistance = 14.0;
 	public boolean kuudraDistance = false;
 	public boolean autoSneakBuild = false;
+	@SerializedName(value = "supplySwap", alternate = {"supplyPearl"})
+	public boolean supplySwap = false;
 	public boolean autoCroesus = false;
 	public int croesusClickDelay = 7;
 	public boolean kittyKuudraFixes = false;

@@ -457,35 +457,54 @@ public final class AutoFish {
 	}
 
 	private static void tickFbWalk(Minecraft client, LocalPlayer player) {
-		if (!RaTAddonClient.CONFIG.fbWalk || state == FishingState.NORMAL
-			|| client.gui.screen() != null || !isFishingRod(player.getMainHandItem())) {
+		if (!RaTAddonClient.CONFIG.fbWalk || client.gui.screen() != null) {
 			stopFbWalk();
 			return;
 		}
 		if (fbWalkPhase != FbWalkPhase.IDLE) {
-			if (physicalDown(client.options.keyLeft) || physicalDown(client.options.keyRight)) {
-				stopFbWalk();
-				return;
-			}
-			if (ModUtils.now() < fbWalkEndsAt) return;
-			releaseFbWalkKeys();
-			fbWalkNextLeft = fbWalkPhase == FbWalkPhase.RIGHT;
-			fbWalkPhase = FbWalkPhase.IDLE;
-			fbWalkEndsAt = 0L;
-			scheduleFbWalk();
+			if (player.fishing == null || !isFishingRod(player.getMainHandItem())
+				|| physicalDown(client.options.keyLeft) || physicalDown(client.options.keyRight)
+				|| ModUtils.now() >= fbWalkEndsAt) finishFbWalk();
 			return;
 		}
-		if ((state != FishingState.WAITING && state != FishingState.BAIT) || player.fishing == null) return;
+		if (player.fishing == null || !isFishingRod(player.getMainHandItem())) return;
 
 		if (nextFbWalkAt == 0L) scheduleFbWalk();
 		if (ModUtils.now() < nextFbWalkAt
-			|| client.options.keyLeft.isDown() || client.options.keyRight.isDown()
-			|| client.options.keyShift.isDown()) return;
-		client.options.keyShift.setDown(true);
-		if (fbWalkNextLeft) client.options.keyLeft.setDown(true);
-		else client.options.keyRight.setDown(true);
+			|| physicalDown(client.options.keyLeft) || physicalDown(client.options.keyRight)
+			|| physicalDown(client.options.keyShift)) return;
 		fbWalkPhase = fbWalkNextLeft ? FbWalkPhase.LEFT : FbWalkPhase.RIGHT;
+		fbWalkNextLeft = !fbWalkNextLeft;
 		fbWalkEndsAt = ModUtils.now() + 500L;
+		nextFbWalkAt = 0L;
+		holdFbWalkKeys();
+	}
+
+	/** Reasserts movement immediately before KeyboardInput samples KeyMapping state. */
+	public static void holdFbWalkKeys() {
+		if (fbWalkPhase == FbWalkPhase.IDLE) return;
+		LocalPlayer player = CLIENT.player;
+		if (!RaTAddonClient.CONFIG.autoFish || !RaTAddonClient.CONFIG.fbWalk
+			|| player == null || CLIENT.level == null || CLIENT.gui.screen() != null) {
+			stopFbWalk();
+			return;
+		}
+		if (player.fishing == null || !isFishingRod(player.getMainHandItem())
+			|| physicalDown(CLIENT.options.keyLeft) || physicalDown(CLIENT.options.keyRight)
+			|| ModUtils.now() >= fbWalkEndsAt) {
+			finishFbWalk();
+			return;
+		}
+		CLIENT.options.keyShift.setDown(true);
+		if (fbWalkPhase == FbWalkPhase.LEFT) CLIENT.options.keyLeft.setDown(true);
+		else CLIENT.options.keyRight.setDown(true);
+	}
+
+	private static void finishFbWalk() {
+		releaseFbWalkKeys();
+		fbWalkPhase = FbWalkPhase.IDLE;
+		fbWalkEndsAt = 0L;
+		scheduleFbWalk();
 	}
 
 	private static void scheduleFbWalk() {

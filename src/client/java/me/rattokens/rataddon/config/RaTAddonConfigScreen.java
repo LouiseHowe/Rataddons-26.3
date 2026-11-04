@@ -492,6 +492,7 @@ public final class RaTAddonConfigScreen extends Screen {
 		if (section == Section.REND) { buildRend(); return; }
 		if (section == Section.KUUDRA_SNEAK) { buildKuudraSneak(); return; }
 		if (section == Section.KUUDRA_CROESUS) { buildKuudraCroesus(); return; }
+		if (section == Section.KUUDRA_SUPPLY_SWAP) { buildKuudraSupplySwap(); return; }
 		if (section == Section.KITTY_FIXES) { buildKittyFixes(); return; }
 		if (section == Section.KUUDRA_DISTANCE) { buildKuudraDistance(); return; }
 		if (section == Section.KUUDRA_HITBOX) { buildKuudraHitbox(); return; }
@@ -500,6 +501,9 @@ public final class RaTAddonConfigScreen extends Screen {
 		y += ROW;
 		place(feature("Auto Sneak in Build", () -> cfg().autoSneakBuild, v -> cfg().autoSneakBuild = v,
 			Section.KUUDRA_SNEAK), y);
+		y += ROW;
+		place(feature("Supply Swap", () -> cfg().supplySwap, v -> cfg().supplySwap = v,
+			Section.KUUDRA_SUPPLY_SWAP), y);
 		y += ROW;
 		place(feature("Auto Croesus", () -> cfg().autoCroesus, v -> cfg().autoCroesus = v,
 			Section.KUUDRA_CROESUS), y);
@@ -549,6 +553,11 @@ public final class RaTAddonConfigScreen extends Screen {
 	private void buildKuudraSneak() {
 		int y = sectionHeader("Auto Sneak in Build", () -> cfg().autoSneakBuild, v -> cfg().autoSneakBuild = v);
 		addGroupLabel("Press Sneak to toggle during Build", y);
+	}
+
+	private void buildKuudraSupplySwap() {
+		int y = sectionHeader("Supply Swap", () -> cfg().supplySwap, v -> cfg().supplySwap = v);
+		addGroupLabel("Use a hotbar Ender Pearl with Elle's Supplies", y);
 	}
 
 	private void buildKuudraCroesus() {
@@ -1424,6 +1433,7 @@ public final class RaTAddonConfigScreen extends Screen {
 		KUUDRA_DISTANCE,
 		KUUDRA_SNEAK,
 		KUUDRA_CROESUS,
+		KUUDRA_SUPPLY_SWAP,
 		KITTY_FIXES
 	}
 

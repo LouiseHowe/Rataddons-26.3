@@ -22,6 +22,7 @@ Run `/rataddon hud` to move screen HUDs: drag to position, scroll to scale, and 
 
 - **Rend Macro:** configurable Rend combat actions and timing.
 - **Auto Sneak in Build:** press Sneak to toggle crouching during the Build phase.
+- **Supply Swap:** use a hotbar Ender Pearl while holding Elle's Supplies during Supplies.
 - **Auto Croesus:** automatically click Croesus with an adjustable delay.
 - **Fixes:** optional Kuudra interaction and targeting fixes.
 - **Kuudra Distance:** show the configurable green distance range.
