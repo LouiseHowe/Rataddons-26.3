@@ -23,6 +23,9 @@ public final class RaTAddonConfig {
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 	private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("rataddon.json");
 
+	public boolean slayerMinibossAlert = false;
+	public boolean slayerBossSpawnAlert = false;
+	public boolean slayerBossSpawnSound = true;
 	public boolean autoFish = false;
 	public boolean slugFish = false;
 	public boolean fbWalk = false;

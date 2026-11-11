@@ -199,6 +199,7 @@ public final class RaTAddonConfigScreen extends Screen {
 			case DUNGEON -> buildDungeon();
 			case FISHING -> buildFishing();
 			case DIANA -> buildDiana();
+			case SLAYER -> buildSlayer();
 			case RENDER -> buildRender();
 			case KUUDRA -> buildKuudra();
 			case MINING -> buildMining();
@@ -351,6 +352,20 @@ public final class RaTAddonConfigScreen extends Screen {
 		searchBox.setFocused(true);
 		setFocused(searchBox);
 		searchBox.setCursorPosition(Math.min(cursor, searchQuery.length()));
+	}
+
+	private void buildSlayer() {
+		if (section == Section.SLAYER_BOSS_SPAWN) {
+			int y = sectionHeader("Boss Spawn Alert", () -> cfg().slayerBossSpawnAlert,
+				v -> cfg().slayerBossSpawnAlert = v);
+			place(toggle(left, "Alert Sound", () -> cfg().slayerBossSpawnSound,
+				v -> cfg().slayerBossSpawnSound = v), y);
+			return;
+		}
+		place(toggle(left, featureWidth(), "Miniboss Alert", () -> cfg().slayerMinibossAlert,
+			v -> cfg().slayerMinibossAlert = v), 0);
+		place(feature("Boss Spawn Alert", () -> cfg().slayerBossSpawnAlert,
+			v -> cfg().slayerBossSpawnAlert = v, Section.SLAYER_BOSS_SPAWN), ROW);
 	}
 
 	private void buildGeneral() {
@@ -1419,6 +1434,7 @@ public final class RaTAddonConfigScreen extends Screen {
 		WILL_O_WISP,
 		PING_OFFSET_MINER,
 		DIANA_MOB_HITS,
+		SLAYER_BOSS_SPAWN,
 		ICE_SPRAY,
 		ICE_ANNOUNCE,
 		STORM,
@@ -1442,6 +1458,7 @@ public final class RaTAddonConfigScreen extends Screen {
 		DUNGEON("Dungeon"),
 		FISHING("Fishing"),
 		DIANA("Diana"),
+		SLAYER("Slayer"),
 		RENDER("Render"),
 		KUUDRA("Kuudra"),
 		MINING("Mining");

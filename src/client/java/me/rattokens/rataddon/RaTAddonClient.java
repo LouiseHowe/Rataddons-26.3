@@ -15,6 +15,7 @@ import me.rattokens.rataddon.feature.WillOWisp;
 import me.rattokens.rataddon.feature.PingOffsetMiner;
 import me.rattokens.rataddon.feature.DianaMobHits;
 import me.rattokens.rataddon.feature.ShaftAnnounce;
+import me.rattokens.rataddon.feature.SlayerAlerts;
 import me.rattokens.rataddon.feature.IceSprayTracker;
 import me.rattokens.rataddon.feature.HudAlert;
 import me.rattokens.rataddon.feature.HypixelJoinAlerts;
@@ -76,6 +77,7 @@ public final class RaTAddonClient implements ClientModInitializer {
 		PingOffsetMiner.init();
 		DianaMobHits.init();
 		ShaftAnnounce.init();
+		SlayerAlerts.init();
 		registerCommands();
 	}
 
