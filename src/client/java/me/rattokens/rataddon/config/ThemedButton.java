@@ -12,129 +12,144 @@ import net.minecraft.network.chat.Component;
 
 import java.util.function.Consumer;
 
-/** Cyan settings control shared by navigation and option rows. */
+/** Compact Phantom-style rows with RatAddons' fixed cyan accent. */
 final class ThemedButton extends AbstractWidget {
-	private static final int CYAN = 0xFF38D8E7;
-	private final Consumer<ThemedButton> action;
-	private boolean selected;
-	private boolean childPage;
+    private static final int CYAN = 0xFF38D8E7;
+    private static final int TEXT = 0xFFDCE8EC;
+    private static final int MUTED = 0xFF85969E;
+    private final Consumer<ThemedButton> action;
+    private boolean selected;
+    private boolean childPage;
+    private boolean sidebar;
 
-	private ThemedButton(int x, int y, int width, int height, Component text, Consumer<ThemedButton> action) {
-		super(x, y, width, height, text);
-		this.action = action;
-	}
+    private ThemedButton(int x, int y, int width, int height, Component text, Consumer<ThemedButton> action) {
+        super(x, y, width, height, text);
+        this.action = action;
+    }
 
-	static Builder builder(Component text, Consumer<ThemedButton> action) {
-		return new Builder(text, action);
-	}
+    static Builder builder(Component text, Consumer<ThemedButton> action) {
+        return new Builder(text, action);
+    }
 
-	void selected(boolean value) {
-		selected = value;
-	}
-	void childPage(boolean value) {
-		childPage = value;
-	}
+    void selected(boolean value) { selected = value; }
+    void childPage(boolean value) { childPage = value; }
+    void sidebar(boolean value) { sidebar = value; }
 
-	@Override
-	protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-		boolean highlighted = active && (isHovered() || isFocused());
-		int background = selected ? 0xFF214148 : highlighted ? 0xFF273840 : 0xFF202A31;
-		UiShapes.rounded(graphics, getX(), getY(), getRight(), getBottom(), 4, background);
-		if (selected) UiShapes.rounded(graphics, getX(), getY() + 5, getX() + 3, getBottom() - 5, 1, CYAN);
-		Font font = Minecraft.getInstance().font;
-		String raw = ChatFormatting.stripFormatting(getMessage().getString());
-		if (raw == null) raw = "";
-		int textY = getY() + (getHeight() - 9) / 2;
-		int suffix = raw.lastIndexOf(": ");
-		int rightLimit = getRight() - (childPage ? 23 : 9);
-		if (childPage) {
-			graphics.text(font, Component.literal(selected ? "⌄" : "›"), getRight() - 15, textY - 1,
-				active ? CYAN : 0xFF819DA3, false);
-		}
-		if (suffix > 0 && suffix < raw.length() - 2) {
-			String label = raw.substring(0, suffix);
-			String value = raw.substring(suffix + 2);
-			boolean switchValue = value.equalsIgnoreCase("ON") || value.equalsIgnoreCase("OFF");
-			if (switchValue) {
-				boolean on = value.equalsIgnoreCase("ON");
-				int sx = rightLimit - 31;
-				UiShapes.rounded(graphics, sx, getY() + (getHeight() - 13) / 2,
-					sx + 31, getY() + (getHeight() + 13) / 2, 6, on ? CYAN : 0xFF53666C);
-				int knobX = on ? sx + 19 : sx + 2;
-				UiShapes.rounded(graphics, knobX, getY() + (getHeight() - 9) / 2,
-					knobX + 9, getY() + (getHeight() + 9) / 2, 4, 0xFFF4FBFC);
-				graphics.text(font, Component.literal(fit(font, label, sx - getX() - 15)),
-					getX() + 9, textY, active ? 0xFFE6F6F8 : 0xFF7F9AA2, false);
-			} else {
-				int valueWidth = font.width(value);
-				graphics.text(font, Component.literal(fit(font, label, rightLimit - valueWidth - getX() - 19)),
-					getX() + 9, textY, active ? 0xFFE6F6F8 : 0xFF7F9AA2, false);
-				graphics.text(font, Component.literal(value), rightLimit - valueWidth, textY,
-					active ? CYAN : 0xFF7F9AA2, false);
-			}
-		} else {
-			graphics.text(font, Component.literal(fit(font, raw, rightLimit - getX() - 11)), getX() + 9,
-				textY, active ? selected ? CYAN : 0xFFE6F6F8 : 0xFF7F9AA2, false);
-		}
-	}
+    @Override
+    protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+        boolean highlighted = active && (isHovered() || isFocused());
+        Font font = Minecraft.getInstance().font;
+        String raw = ChatFormatting.stripFormatting(getMessage().getString());
+        if (raw == null) raw = "";
+        int x = getX(), y = getY(), right = getRight(), bottom = getBottom();
+        int textY = y + (getHeight() - font.lineHeight) / 2 + 1;
 
-	static String fit(Font font, String text, int maxWidth) {
-		if (maxWidth <= 0) return "";
-		if (font.width(text) <= maxWidth) return text;
-		String ellipsis = "…";
-		while (!text.isEmpty() && font.width(text + ellipsis) > maxWidth) {
-			text = text.substring(0, text.length() - 1);
-		}
-		return text + ellipsis;
-	}
+        if (sidebar) {
+            if (selected) {
+                graphics.fill(x, y, right, bottom, 0xFF1C3038);
+                graphics.fill(x, y, x + 2, bottom, CYAN);
+            } else if (highlighted) {
+                graphics.fill(x, y, right, bottom, 0xFF1B262C);
+            }
+            graphics.text(font, Component.literal(fit(font, raw, getWidth() - 24)),
+                x + 13, textY, selected ? CYAN : highlighted ? TEXT : MUTED, false);
+            return;
+        }
 
-	@Override
-	public void onClick(MouseButtonEvent event, boolean doubleClick) {
-		press();
-	}
+        if (selected) graphics.fill(x, y, right, bottom, 0x1638D8E7);
+        else if (highlighted) graphics.fill(x, y, right, bottom, 0x0DFFFFFF);
+        graphics.fill(x, bottom - 1, right, bottom, 0x1EFFFFFF);
 
-	@Override
-	public boolean keyPressed(KeyEvent event) {
-		if (!active || !isFocused() || !event.isConfirmation()) return false;
-		press();
-		return true;
-	}
+        int suffix = raw.lastIndexOf(": ");
+        boolean hasValue = suffix > 0 && suffix < raw.length() - 2;
+        String label = hasValue ? raw.substring(0, suffix) : raw;
+        String value = hasValue ? raw.substring(suffix + 2) : "";
+        boolean isSwitch = value.equalsIgnoreCase("ON") || value.equalsIgnoreCase("OFF");
+        int textEnd = right - 9;
 
-	private void press() {
-		if (!active) return;
-		Minecraft client = Minecraft.getInstance();
-		playButtonClickSound(client.getSoundManager());
-		action.accept(this);
-	}
+        if (isSwitch) {
+            boolean on = value.equalsIgnoreCase("ON");
+            int sx = right - 42;
+            int sy = y + (getHeight() - 12) / 2;
+            UiShapes.rounded(graphics, sx - 1, sy - 1, sx + 35, sy + 13, 7, 0xFF53646B);
+            UiShapes.rounded(graphics, sx, sy, sx + 34, sy + 12, 6, on ? CYAN : 0xFF34444A);
+            int knobX = on ? sx + 22 : sx + 2;
+            UiShapes.rounded(graphics, knobX, sy + 1, knobX + 10, sy + 11, 5, 0xFFF8FEFF);
+            textEnd = sx - (childPage ? 16 : 5);
+        } else if (hasValue) {
+            int valueWidth = font.width(value);
+            graphics.text(font, Component.literal(value), right - valueWidth - 8,
+                textY, active ? CYAN : MUTED, false);
+            textEnd = right - valueWidth - 15;
+        }
 
-	@Override
-	protected void updateWidgetNarration(NarrationElementOutput output) {
-		defaultButtonNarrationText(output);
-	}
+        if (childPage) {
+            int arrowX = isSwitch ? right - 57 : right - 18;
+            graphics.text(font, Component.literal(selected ? "⌄" : "›"), arrowX,
+                textY - 1, active ? CYAN : MUTED, false);
+            if (!hasValue) textEnd = arrowX - 5;
+        }
+        graphics.text(font, Component.literal(fit(font, label, textEnd - x - 9)),
+            x + 8, textY, active ? selected ? CYAN : TEXT : MUTED, false);
+    }
 
-	static final class Builder {
-		private final Component text;
-		private final Consumer<ThemedButton> action;
-		private int x;
-		private int y;
-		private int width = 150;
-		private int height = 20;
+    static String fit(Font font, String text, int maxWidth) {
+        if (maxWidth <= 0) return "";
+        if (font.width(text) <= maxWidth) return text;
+        String ellipsis = "…";
+        while (!text.isEmpty() && font.width(text + ellipsis) > maxWidth) {
+            text = text.substring(0, text.length() - 1);
+        }
+        return text + ellipsis;
+    }
 
-		private Builder(Component text, Consumer<ThemedButton> action) {
-			this.text = text;
-			this.action = action;
-		}
+    @Override
+    public void onClick(MouseButtonEvent event, boolean doubleClick) {
+        press();
+    }
 
-		Builder bounds(int x, int y, int width, int height) {
-			this.x = x;
-			this.y = y;
-			this.width = width;
-			this.height = height;
-			return this;
-		}
+    @Override
+    public boolean keyPressed(KeyEvent event) {
+        if (!active || !isFocused() || !event.isConfirmation()) return false;
+        press();
+        return true;
+    }
 
-		ThemedButton build() {
-			return new ThemedButton(x, y, width, height, text, action);
-		}
-	}
+    private void press() {
+        if (!active) return;
+        Minecraft client = Minecraft.getInstance();
+        playButtonClickSound(client.getSoundManager());
+        action.accept(this);
+    }
+
+    @Override
+    protected void updateWidgetNarration(NarrationElementOutput output) {
+        defaultButtonNarrationText(output);
+    }
+
+    static final class Builder {
+        private final Component text;
+        private final Consumer<ThemedButton> action;
+        private int x;
+        private int y;
+        private int width = 150;
+        private int height = 20;
+
+        private Builder(Component text, Consumer<ThemedButton> action) {
+            this.text = text;
+            this.action = action;
+        }
+
+        Builder bounds(int x, int y, int width, int height) {
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+            return this;
+        }
+
+        ThemedButton build() {
+            return new ThemedButton(x, y, width, height, text, action);
+        }
+    }
 }

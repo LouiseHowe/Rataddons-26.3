@@ -36,9 +36,11 @@ import java.util.function.Supplier;
 import java.util.function.Consumer;
 
 public final class RaTAddonConfigScreen extends Screen {
-	private static final int SIDEBAR_WIDTH = 158;
-	private static final int ROW = 29;
-	private static final int SIDEBAR_ROW = 31;
+	private static final int SIDEBAR_WIDTH = 108;
+	private static final int HEADER_HEIGHT = 34;
+	private static final int FOOTER_HEIGHT = 28;
+	private static final int ROW = 25;
+	private static final int SIDEBAR_ROW = 24;
 	private static final int ACCENT = 0xFF38D8E7;
 	private static final String CHEVRON = "▸";
 	private static final Map<Page, Integer> SCROLL = new EnumMap<>(Page.class);
@@ -89,13 +91,13 @@ public final class RaTAddonConfigScreen extends Screen {
 		panelHeight = Math.min(280, Math.max(210, height - 24));
 		panelX = (width - panelWidth) / 2;
 		panelY = (height - panelHeight) / 2;
-		sidebarWidth = panelWidth < 510 ? 124 : SIDEBAR_WIDTH;
-		left = panelX + sidebarWidth + 22;
-		contentWidth = Math.max(1, panelWidth - sidebarWidth - 42);
-		columnWidth = Math.max(1, (contentWidth - 12) / 2);
-		right = left + columnWidth + 12;
-		contentTop = panelY + 76;
-		contentBottom = panelY + panelHeight - 20;
+		sidebarWidth = SIDEBAR_WIDTH;
+		left = panelX + sidebarWidth + 12;
+		contentWidth = Math.max(1, panelWidth - sidebarWidth - 24);
+		columnWidth = Math.max(1, (contentWidth - 8) / 2);
+		right = left + columnWidth + 8;
+		contentTop = panelY + 56;
+		contentBottom = panelY + panelHeight - 9;
 		if (searchIndex.isEmpty()) buildSearchIndex();
 
 		content.clear();
@@ -103,11 +105,11 @@ public final class RaTAddonConfigScreen extends Screen {
 		features.clear();
 		searchResults.clear();
 		contentHeight = 0;
-		int searchWidth = Math.min(224, Math.max(80, contentWidth / 2));
-		searchBox = new EditBox(font, panelX + panelWidth - searchWidth - 18, panelY + 16,
-			searchWidth, 22, Component.literal("Search settings"));
+		int searchWidth = Math.min(144, Math.max(80, panelWidth - sidebarWidth - 60));
+		searchBox = new EditBox(font, panelX + panelWidth - searchWidth - 2, panelY + 12,
+			searchWidth - 10, 9, Component.literal("Search settings"));
 		searchBox.setMaxLength(96);
-		searchBox.setHint(Component.literal("Search all settings..."));
+		searchBox.setHint(Component.empty());
 		searchBox.setBordered(false);
 		searchBox.setTextColor(0xFFE8F9FB);
 		searchBox.setValue(searchQuery);
@@ -118,8 +120,12 @@ public final class RaTAddonConfigScreen extends Screen {
 		});
 		addRenderableWidget(searchBox);
 		buildSidebar();
+		int footerButtonWidth = (sidebarWidth - 18) / 2;
+		addRenderableWidget(ThemedButton.builder(Component.literal("HUD"), button ->
+			minecraft.gui.setScreen(new HudEditorScreen(this)))
+			.bounds(panelX + 6, panelY + panelHeight - 23, footerButtonWidth, 18).build());
 		addRenderableWidget(ThemedButton.builder(Component.literal("Done"), button -> onClose())
-			.bounds(panelX + 14, panelY + panelHeight - 42, sidebarWidth - 28, 24).build());
+			.bounds(panelX + 12 + footerButtonWidth, panelY + panelHeight - 23, footerButtonWidth, 18).build());
 
 		if (searchQuery.isBlank()) buildVisiblePage();
 		else buildSearchResults();
@@ -287,10 +293,11 @@ public final class RaTAddonConfigScreen extends Screen {
 		}
 		for (int index = sidebarScroll; index < Math.min(sidebarEntries.size(), sidebarScroll + visible); index++) {
 			NavEntry entry = sidebarEntries.get(index);
-			int x = panelX + 12;
-			int w = sidebarWidth - 24;
+			int x = panelX + 1;
+			int w = sidebarWidth - 2;
 			ThemedButton button = ThemedButton.builder(Component.literal(entry.label), ignored -> navigate(entry.page, Section.LIST, null))
-				.bounds(x, panelY + 75 + (index - sidebarScroll) * SIDEBAR_ROW, w, 26).build();
+				.bounds(x, panelY + HEADER_HEIGHT + 6 + (index - sidebarScroll) * SIDEBAR_ROW, w, 22).build();
+			button.sidebar(true);
 			button.selected(entry.page == page);
 			addRenderableWidget(button);
 		}
@@ -1073,7 +1080,7 @@ public final class RaTAddonConfigScreen extends Screen {
 			boolean value = !getter.get();
 			setter.accept(value);
 			clicked.setMessage(featureText(name, getter));
-		}).bounds(left, 0, featureWidth(), 20).build();
+		}).bounds(left, 0, featureWidth(), 24).build();
 		button.childPage(true);
 		button.selected(section == target);
 		features.add(new FeatureRow(button, target));
@@ -1181,7 +1188,7 @@ public final class RaTAddonConfigScreen extends Screen {
 	}
 
 	private int visibleSidebarTabs() {
-		return Math.max(1, (panelHeight - 131) / SIDEBAR_ROW);
+		return Math.max(1, (panelHeight - HEADER_HEIGHT - FOOTER_HEIGHT - 10) / SIDEBAR_ROW);
 	}
 
 	@Override
@@ -1252,28 +1259,51 @@ public final class RaTAddonConfigScreen extends Screen {
 
 	@Override
 	public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-		graphics.fill(0, 0, width, height, 0xC8091016);
-		UiShapes.rounded(graphics, panelX - 4, panelY - 4, panelX + panelWidth + 4, panelY + panelHeight + 4, 11, 0x66000000);
-		UiShapes.rounded(graphics, panelX, panelY, panelX + panelWidth, panelY + panelHeight, 9, 0xFF151B21);
-		graphics.fill(panelX + sidebarWidth, panelY + 1, panelX + sidebarWidth + 1, panelY + panelHeight - 1, 0xFF2B3940);
-		graphics.fill(panelX + 1, panelY + 53, panelX + panelWidth - 1, panelY + 54, 0xFF2B3940);
-		UiShapes.rounded(graphics, searchBox.getX() - 7, searchBox.getY() - 4,
-			searchBox.getRight() + 7, searchBox.getBottom() + 4, 5,
-			searchBox.isFocused() ? 0xFF275A63 : 0xFF202B32);
-		graphics.fill(panelX + 15, panelY + 24, panelX + 18, panelY + 40, ACCENT);
-		graphics.text(font, Component.literal("RatAddons"), panelX + 27, panelY + 17, 0xFFF2F8F9, true);
-		graphics.text(font, Component.literal("SETTINGS"), panelX + 27, panelY + 32, 0xFF83A5AB, false);
-		String title = searchQuery.isBlank() ? page.label + (section == Section.LIST ? "" : "  /  " + sectionName(page, section)) : "Search results";
-		graphics.text(font, Component.literal(ThemedButton.fit(font, title, contentWidth - 12)), left,
-			panelY + 62, 0xFFDDECEF, false);
-		super.extractRenderState(graphics, mouseX, mouseY, delta);
-		if (sidebarEntries.size() > visibleSidebarTabs()) {
-			graphics.text(font, Component.literal("↕ Categories"), panelX + 19,
-				panelY + panelHeight - 57, 0xFF78979E, false);
+		graphics.fill(0, 0, width, height, 0xBB06080C);
+		UiShapes.rounded(graphics, panelX - 4, panelY - 4,
+			panelX + panelWidth + 4, panelY + panelHeight + 4, 10, 0x66000000);
+		UiShapes.rounded(graphics, panelX - 1, panelY - 1,
+			panelX + panelWidth + 1, panelY + panelHeight + 1, 7, 0xFF35444B);
+		UiShapes.rounded(graphics, panelX, panelY,
+			panelX + panelWidth, panelY + panelHeight, 6, 0xFF15191F);
+		graphics.enableScissor(panelX, panelY, panelX + panelWidth, panelY + panelHeight);
+		UiShapes.radialGlow(graphics, panelX + sidebarWidth, panelY + HEADER_HEIGHT,
+			panelWidth - sidebarWidth, panelHeight - HEADER_HEIGHT, 0x3238D8E7);
+		graphics.fill(panelX, panelY, panelX + panelWidth, panelY + HEADER_HEIGHT, 0xFF1B2127);
+		graphics.fill(panelX, panelY + HEADER_HEIGHT - 1,
+			panelX + panelWidth, panelY + HEADER_HEIGHT, ACCENT);
+		graphics.fill(panelX, panelY + HEADER_HEIGHT,
+			panelX + sidebarWidth, panelY + panelHeight - FOOTER_HEIGHT, 0xFF111A20);
+		graphics.fill(panelX + sidebarWidth - 1, panelY + HEADER_HEIGHT,
+			panelX + sidebarWidth, panelY + panelHeight, 0xFF314048);
+		graphics.fill(panelX, panelY + panelHeight - FOOTER_HEIGHT,
+			panelX + sidebarWidth, panelY + panelHeight, 0xFF1B2127);
+		graphics.fill(panelX, panelY + panelHeight - FOOTER_HEIGHT,
+			panelX + sidebarWidth, panelY + panelHeight - FOOTER_HEIGHT + 1, 0xFF314048);
+		UiShapes.rounded(graphics, panelX + 7, panelY + 6, panelX + 29, panelY + 28, 5, 0xFF23434C);
+		graphics.text(font, Component.literal("R"), panelX + 14, panelY + 13, ACCENT, true);
+		graphics.text(font, Component.literal("RatAddons"), panelX + 36, panelY + 13, ACCENT, true);
+		UiShapes.rounded(graphics, searchBox.getX() - 6, searchBox.getY() - 4,
+			searchBox.getRight() + 6, searchBox.getBottom() + 4, 5, 0xFF52636B);
+		UiShapes.rounded(graphics, searchBox.getX() - 5, searchBox.getY() - 3,
+			searchBox.getRight() + 5, searchBox.getBottom() + 3, 4,
+			searchBox.isFocused() ? 0xFF233A42 : 0xFF11191F);
+		if (searchQuery.isBlank() && !searchBox.isFocused()) {
+			graphics.text(font, Component.literal("Search..."), searchBox.getX(),
+				searchBox.getY(), 0xFF8298A1, false);
 		}
-		int scroll = currentScroll();
+		String title = searchQuery.isBlank()
+			? page.label + (section == Section.LIST ? "" : "  /  " + sectionName(page, section))
+			: "Search results";
+		graphics.text(font, Component.literal(ThemedButton.fit(font, title, contentWidth - 12)),
+			left + 1, panelY + 42, 0xFF93ABB3, false);
+		UiShapes.rounded(graphics, panelX + 5, panelY + panelHeight - 24,
+			panelX + 6 + (sidebarWidth - 18) / 2, panelY + panelHeight - 4, 4, 0xFF27343B);
+		UiShapes.rounded(graphics, panelX + 11 + (sidebarWidth - 18) / 2, panelY + panelHeight - 24,
+			panelX + sidebarWidth - 5, panelY + panelHeight - 4, 4, 0xFF27343B);
+		super.extractRenderState(graphics, mouseX, mouseY, delta);
 		for (Label label : labels) {
-			int y = contentTop + label.y + wrappedShift(label.y) - scroll;
+			int y = contentTop + label.y + wrappedShift(label.y) - currentScroll();
 			if (y >= contentTop && y + 9 <= contentBottom) {
 				graphics.text(font, Component.literal(label.text), label.x, y, label.color, true);
 			}
@@ -1282,12 +1312,14 @@ public final class RaTAddonConfigScreen extends Screen {
 		if (max > 0) {
 			int track = contentBottom - contentTop;
 			int thumb = Math.max(18, track * track / (track + max));
-			int thumbY = contentTop + (track - thumb) * scroll / max;
-			UiShapes.rounded(graphics, left + contentWidth + 7, thumbY,
-				left + contentWidth + 10, thumbY + thumb, 1, ACCENT);
+			int thumbY = contentTop + (track - thumb) * currentScroll() / max;
+			graphics.fill(left + contentWidth + 7, contentTop,
+				left + contentWidth + 10, contentBottom, 0x2038D8E7);
+			graphics.fill(left + contentWidth + 7, thumbY,
+				left + contentWidth + 10, thumbY + thumb, ACCENT);
 		}
+		graphics.disableScissor();
 	}
-
 	private String sectionName(Page targetPage, Section targetSection) {
 		return navigation.getOrDefault(targetPage, List.of()).stream()
 			.filter(nav -> nav.section == targetSection).map(NavSection::label).findFirst().orElse("Overview");
@@ -1302,7 +1334,7 @@ public final class RaTAddonConfigScreen extends Screen {
 			boolean value = !getter.get();
 			setter.accept(value);
 			button.setMessage(toggleText(name, getter.get()));
-		}).bounds(x, 0, width, 20).build();
+		}).bounds(x, 0, width, 24).build();
 	}
 
 	private ThemedButton colorButton(int x, String name, IntSupplier getter, IntConsumer setter) {
@@ -1331,7 +1363,15 @@ public final class RaTAddonConfigScreen extends Screen {
 	}
 
 	private EditBox textBox(int x, String name, Supplier<String> getter, Consumer<String> setter) {
-		EditBox box = new EditBox(font, x, 0, columnWidth, 20, Component.literal(name));
+		EditBox box = new EditBox(font, x, 0, columnWidth, 20, Component.literal(name)) {
+			@Override
+			public void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+				UiShapes.rounded(graphics, getX(), getY(), getRight(), getBottom(), 5, 0xFF52646B);
+				UiShapes.rounded(graphics, getX() + 1, getY() + 1,
+					getRight() - 1, getBottom() - 1, 4, isFocused() ? 0xFF233B43 : 0xFF121A20);
+				super.extractWidgetRenderState(graphics, mouseX, mouseY, delta);
+			}
+		};
 		box.setMaxLength(80);
 		box.setBordered(false);
 		box.setTextColor(0xFFE6F6F8);
@@ -1353,7 +1393,8 @@ public final class RaTAddonConfigScreen extends Screen {
 	private static void renderSlider(AbstractSliderButton slider, double value, GuiGraphicsExtractor graphics) {
 		int x = slider.getX(), y = slider.getY(), right = slider.getRight(), bottom = slider.getBottom();
 		boolean highlighted = slider.active && slider.isHoveredOrFocused();
-		UiShapes.rounded(graphics, x, y, right, bottom, 4, highlighted ? 0xFF243C43 : 0xFF202A31);
+		if (highlighted) graphics.fill(x, y, right, bottom, 0x0DFFFFFF);
+		graphics.fill(x, bottom - 1, right, bottom, 0x1EFFFFFF);
 		UiShapes.rounded(graphics, x + 9, bottom - 6, right - 9, bottom - 3, 1, 0xFF394D54);
 		int handle = x + 9 + (int) Math.round(Math.clamp(value, 0.0, 1.0) * Math.max(0, slider.getWidth() - 18));
 		if (handle > x + 9) UiShapes.rounded(graphics, x + 9, bottom - 6, handle, bottom - 3, 1, ACCENT);
