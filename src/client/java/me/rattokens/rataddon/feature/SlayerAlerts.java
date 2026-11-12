@@ -59,16 +59,18 @@ public final class SlayerAlerts {
     }
 
     private static void onMessage(String raw) {
-        if (!RaTAddonClient.CONFIG.slayerMinibossAlert || !SkyblockLocation.inSkyblock()) return;
+        var config = RaTAddonClient.CONFIG;
+        if ((!config.slayerMinibossAlert && !config.slayerMinibossSpawnSound)
+            || !SkyblockLocation.inSkyblock()) return;
         String text = ChatFormatting.stripFormatting(raw).trim();
         Matcher match = MINIBOSS.matcher(text);
         if (!match.matches()) return;
-        show("miniboss",
+        alert("miniboss",
             List.of(new Line(Component.literal(match.group(1).trim())
                     .withStyle(ChatFormatting.RED, ChatFormatting.BOLD), TITLE_SCALE),
                 new Line(Component.literal("Miniboss Spawned!")
                     .withStyle(ChatFormatting.GRAY), SUBTITLE_SCALE)),
-            true);
+            config.slayerMinibossAlert, config.slayerMinibossSpawnSound);
     }
 
     private static void tick(Minecraft client) {
@@ -86,11 +88,13 @@ public final class SlayerAlerts {
         boolean nextQuestActive = TIER.matcher(questName).find() && isKnownBoss(questName);
         boolean nextBossActive = nextQuestActive && lines.stream()
             .anyMatch(line -> line.equalsIgnoreCase("Slay the boss!"));
-        if (RaTAddonClient.CONFIG.slayerBossSpawnAlert && questActive && !bossActive && nextBossActive) {
-            show("boss",
+        var config = RaTAddonClient.CONFIG;
+        if ((config.slayerBossSpawnAlert || config.slayerBossSpawnSound)
+            && questActive && !bossActive && nextBossActive) {
+            alert("boss",
                 List.of(new Line(Component.literal("Boss Spawned!")
                     .withStyle(ChatFormatting.WHITE, ChatFormatting.BOLD), TITLE_SCALE)),
-                RaTAddonClient.CONFIG.slayerBossSpawnSound);
+                config.slayerBossSpawnAlert, config.slayerBossSpawnSound);
         }
         questActive = nextQuestActive;
         bossActive = nextBossActive;
@@ -123,10 +127,12 @@ public final class SlayerAlerts {
             .toList();
     }
 
-    private static void show(String id, List<Line> lines, boolean playSound) {
-        ACTIVE.removeIf(alert -> alert.id.equals(id));
-        long now = System.currentTimeMillis();
-        ACTIVE.add(new Alert(id, lines, now, now + DURATION_MS));
+    private static void alert(String id, List<Line> lines, boolean showWarn, boolean playSound) {
+        if (showWarn) {
+            ACTIVE.removeIf(existing -> existing.id.equals(id));
+            long now = System.currentTimeMillis();
+            ACTIVE.add(new Alert(id, lines, now, now + DURATION_MS));
+        }
         if (playSound) {
             Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(WARNING, 1.0F, 0.8F));
         }

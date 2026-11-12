@@ -24,8 +24,9 @@ public final class RaTAddonConfig {
 	private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("rataddon.json");
 
 	public boolean slayerMinibossAlert = false;
+	public boolean slayerMinibossSpawnSound = false;
 	public boolean slayerBossSpawnAlert = false;
-	public boolean slayerBossSpawnSound = true;
+	public boolean slayerBossSpawnSound = false;
 	public boolean autoFish = false;
 	public boolean slugFish = false;
 	public boolean fbWalk = false;
@@ -274,6 +275,13 @@ public final class RaTAddonConfig {
 			RaTAddonConfig config = GSON.fromJson(saved, RaTAddonConfig.class);
 			if (config == null) {
 				config = new RaTAddonConfig();
+			}
+			// Before the sound controls were independent, miniboss sound followed its
+			// alert toggle and boss sound required both the alert and sound toggles.
+			if (!saved.has("slayerMinibossSpawnSound")) {
+				config.slayerMinibossSpawnSound = config.slayerMinibossAlert;
+				config.slayerBossSpawnSound = config.slayerBossSpawnAlert
+					&& (!saved.has("slayerBossSpawnSound") || config.slayerBossSpawnSound);
 			}
 			config.sanitize();
 			return config;

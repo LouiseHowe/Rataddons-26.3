@@ -362,17 +362,24 @@ public final class RaTAddonConfigScreen extends Screen {
 	}
 
 	private void buildSlayer() {
-		if (section == Section.SLAYER_BOSS_SPAWN) {
-			int y = sectionHeader("Boss Spawn Alert", () -> cfg().slayerBossSpawnAlert,
-				v -> cfg().slayerBossSpawnAlert = v);
-			place(toggle(left, "Alert Sound", () -> cfg().slayerBossSpawnSound,
-				v -> cfg().slayerBossSpawnSound = v), y);
+		if (section == Section.SLAYER_MINIBOSS_SPAWN) {
+			int y = sectionHeader("Miniboss Spawn");
+			place(toggle(left, "Spawn Warn", () -> cfg().slayerMinibossAlert,
+				v -> cfg().slayerMinibossAlert = v), y);
+			place(toggle(left, "Spawn Sound", () -> cfg().slayerMinibossSpawnSound,
+				v -> cfg().slayerMinibossSpawnSound = v), y + ROW);
 			return;
 		}
-		place(toggle(left, featureWidth(), "Miniboss Alert", () -> cfg().slayerMinibossAlert,
-			v -> cfg().slayerMinibossAlert = v), 0);
-		place(feature("Boss Spawn Alert", () -> cfg().slayerBossSpawnAlert,
-			v -> cfg().slayerBossSpawnAlert = v, Section.SLAYER_BOSS_SPAWN), ROW);
+		if (section == Section.SLAYER_BOSS_SPAWN) {
+			int y = sectionHeader("Boss Spawn");
+			place(toggle(left, "Spawn Warn", () -> cfg().slayerBossSpawnAlert,
+				v -> cfg().slayerBossSpawnAlert = v), y);
+			place(toggle(left, "Spawn Sound", () -> cfg().slayerBossSpawnSound,
+				v -> cfg().slayerBossSpawnSound = v), y + ROW);
+			return;
+		}
+		place(feature("Miniboss Spawn", Section.SLAYER_MINIBOSS_SPAWN), 0);
+		place(feature("Boss Spawn", Section.SLAYER_BOSS_SPAWN), ROW);
 	}
 
 	private void buildGeneral() {
@@ -1475,6 +1482,7 @@ public final class RaTAddonConfigScreen extends Screen {
 		WILL_O_WISP,
 		PING_OFFSET_MINER,
 		DIANA_MOB_HITS,
+		SLAYER_MINIBOSS_SPAWN,
 		SLAYER_BOSS_SPAWN,
 		ICE_SPRAY,
 		ICE_ANNOUNCE,
