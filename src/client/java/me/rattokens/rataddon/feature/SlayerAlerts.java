@@ -68,19 +68,12 @@ public final class SlayerAlerts {
                     .withStyle(ChatFormatting.RED, ChatFormatting.BOLD), TITLE_SCALE),
                 new Line(Component.literal("Miniboss Spawned!")
                     .withStyle(ChatFormatting.GRAY), SUBTITLE_SCALE)),
-            3, 450L);
+            true);
     }
 
     private static void tick(Minecraft client) {
         long now = System.currentTimeMillis();
         ACTIVE.removeIf(alert -> now >= alert.expiresAt);
-        for (Alert alert : ACTIVE) {
-            if (alert.soundPlayed >= alert.soundPlays || now < alert.nextSoundAt) continue;
-            client.getSoundManager().play(SimpleSoundInstance.forUI(WARNING, 1.0F, 0.8F));
-            alert.soundPlayed++;
-            alert.nextSoundAt = now + alert.soundInterval;
-        }
-
         if (!SkyblockLocation.inSkyblock() || client.level == null || client.player == null) {
             bossActive = false;
             questActive = false;
@@ -97,7 +90,7 @@ public final class SlayerAlerts {
             show("boss",
                 List.of(new Line(Component.literal("Boss Spawned!")
                     .withStyle(ChatFormatting.WHITE, ChatFormatting.BOLD), TITLE_SCALE)),
-                RaTAddonClient.CONFIG.slayerBossSpawnSound ? 4 : 0, 225L);
+                RaTAddonClient.CONFIG.slayerBossSpawnSound);
         }
         questActive = nextQuestActive;
         bossActive = nextBossActive;
@@ -130,15 +123,12 @@ public final class SlayerAlerts {
             .toList();
     }
 
-    private static void show(String id, List<Line> lines, int soundPlays, long soundInterval) {
+    private static void show(String id, List<Line> lines, boolean playSound) {
         ACTIVE.removeIf(alert -> alert.id.equals(id));
         long now = System.currentTimeMillis();
-        Alert alert = new Alert(id, lines, now, now + DURATION_MS, soundPlays, soundInterval);
-        ACTIVE.add(alert);
-        if (soundPlays > 0) {
+        ACTIVE.add(new Alert(id, lines, now, now + DURATION_MS));
+        if (playSound) {
             Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(WARNING, 1.0F, 0.8F));
-            alert.soundPlayed = 1;
-            alert.nextSoundAt = now + soundInterval;
         }
     }
 
@@ -177,19 +167,11 @@ public final class SlayerAlerts {
         private final List<Line> lines;
         private final long createdAt;
         private final long expiresAt;
-        private final int soundPlays;
-        private final long soundInterval;
-        private int soundPlayed;
-        private long nextSoundAt;
-
-        private Alert(String id, List<Line> lines, long createdAt, long expiresAt,
-                      int soundPlays, long soundInterval) {
+        private Alert(String id, List<Line> lines, long createdAt, long expiresAt) {
             this.id = id;
             this.lines = lines;
             this.createdAt = createdAt;
             this.expiresAt = expiresAt;
-            this.soundPlays = soundPlays;
-            this.soundInterval = soundInterval;
         }
     }
 }
