@@ -17,6 +17,7 @@
 	"AbstractSignEditScreenMixin",
     "GameRendererMixin",
     "FirstPersonHandsAndItemsMixin",
+    "FirstPersonHandsAndItemsRendererMixin",
     "ItemInHandRendererAnimationMixin",
     "ItemInHandRendererMixin",
     "LivingEntityMixin",
