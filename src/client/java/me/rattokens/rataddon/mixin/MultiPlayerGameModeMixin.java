@@ -3,9 +3,11 @@ package me.rattokens.rataddon.mixin;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 
+import me.rattokens.rataddon.feature.KuudraAutomation;
 import me.rattokens.rataddon.feature.RendMacro;
 import me.rattokens.rataddon.feature.Storm;
 import me.rattokens.rataddon.feature.KittyKuudraFixes;
+import me.rattokens.rataddon.feature.KittyStun;
 import me.rattokens.rataddon.feature.DianaMobHits;
 import me.rattokens.rataddon.feature.PingOffsetMiner;
 import net.minecraft.world.entity.Entity;
@@ -39,7 +41,7 @@ public class MultiPlayerGameModeMixin {
 		cancellable = true
 	)
 	private void rataddon$kuudraBeforeUseItem(Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
-		if (KittyKuudraFixes.cancelUse(player)) {
+		if (!KuudraAutomation.isSwappingSupply() && KittyKuudraFixes.cancelUse(player)) {
 			cir.setReturnValue(InteractionResult.PASS);
 		}
 	}
@@ -62,6 +64,7 @@ public class MultiPlayerGameModeMixin {
 	private void rataddon$useItem(Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
 		Storm.useItem(player, hand, cir.getReturnValue());
 		BoneTracker.useItem(player, hand, cir.getReturnValue());
-		RendMacro.useItem(player, hand, cir.getReturnValue());
+        RendMacro.useItem(player, hand, cir.getReturnValue());
+        KittyStun.useItem(player, hand, cir.getReturnValue());
 	}
 }

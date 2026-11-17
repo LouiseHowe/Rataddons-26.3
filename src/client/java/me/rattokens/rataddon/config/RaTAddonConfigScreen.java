@@ -3,8 +3,10 @@ package me.rattokens.rataddon.config;
 import me.rattokens.rataddon.RaTAddonClient;
 import me.rattokens.rataddon.feature.Animation;
 import me.rattokens.rataddon.feature.AutoFish;
+import me.rattokens.rataddon.feature.DungeonSecrets;
 import me.rattokens.rataddon.feature.HudEditorScreen;
 import me.rattokens.rataddon.feature.PingOffsetMiner;
+import me.rattokens.rataddon.feature.GemstoneNuker;
 import me.rattokens.rataddon.feature.MineshaftEsp;
 import me.rattokens.rataddon.feature.WillOWisp;
 import me.rattokens.rataddon.feature.ChatMacrosScreen;
@@ -181,9 +183,12 @@ public final class RaTAddonConfigScreen extends Screen {
 		}
 		List<Placed> children = List.copyOf(content);
 		List<Label> childLabels = List.copyOf(labels);
-		int childHeight = children.stream().mapToInt(child -> child.y + child.widget.getHeight()).max().orElse(0);
+		int childHeight = Math.max(
+			children.stream().mapToInt(child -> child.y + child.widget.getHeight()).max().orElse(0),
+			childLabels.stream().mapToInt(label -> label.y + font.lineHeight).max().orElse(0));
 		int shift = Math.max(ROW, ((childHeight + ROW - 1) / ROW) * ROW + 7);
 		content.clear();
+		labels.clear();
 		boolean inserted = false;
 		for (Placed root : roots) {
 			if (!inserted && root.y >= insertionY) {
@@ -362,6 +367,14 @@ public final class RaTAddonConfigScreen extends Screen {
 	}
 
 	private void buildSlayer() {
+		if (section == Section.SLAYER_BOSS_SOON) {
+			int y = sectionHeader("Boss Soon Warning");
+			place(toggle(left, "Soon Warn", () -> cfg().slayerBossSoonAlert,
+				v -> cfg().slayerBossSoonAlert = v), y);
+			place(toggle(left, "Soon Sound", () -> cfg().slayerBossSoonSound,
+				v -> cfg().slayerBossSoonSound = v), y + ROW);
+			return;
+		}
 		if (section == Section.SLAYER_MINIBOSS_SPAWN) {
 			int y = sectionHeader("Miniboss Spawn");
 			place(toggle(left, "Spawn Warn", () -> cfg().slayerMinibossAlert,
@@ -379,13 +392,15 @@ public final class RaTAddonConfigScreen extends Screen {
 			return;
 		}
 		place(feature("Miniboss Spawn", Section.SLAYER_MINIBOSS_SPAWN), 0);
-		place(feature("Boss Spawn", Section.SLAYER_BOSS_SPAWN), ROW);
+		place(feature("Boss Soon Warning", Section.SLAYER_BOSS_SOON), ROW);
+		place(feature("Boss Spawn", Section.SLAYER_BOSS_SPAWN), ROW * 2);
 	}
 
 	private void buildGeneral() {
 		if (section == Section.AUTO_CLICKER) { buildAutoClicker(); return; }
 		if (section == Section.CHAT_MACROS) { buildChatMacros(); return; }
 		if (section == Section.CLICK_THROUGH_PLAYERS) { buildClickThroughPlayers(); return; }
+		if (section == Section.RAG_TIMER) { buildRagTimer(); return; }
 		place(toggle(left, featureWidth(), "AutoExperiment", () -> cfg().autoExperiment,
 			v -> cfg().autoExperiment = v), 0);
 		place(toggle(left, "Focus Player", () -> cfg().focusPlayer, v -> cfg().focusPlayer = v), ROW);
@@ -394,6 +409,26 @@ public final class RaTAddonConfigScreen extends Screen {
 		place(feature("Chat Macros", () -> cfg().chatMacros, v -> cfg().chatMacros = v, Section.CHAT_MACROS), ROW * 4);
 		place(feature("Click Through Players", () -> cfg().clickThroughPlayers,
 			v -> cfg().clickThroughPlayers = v, Section.CLICK_THROUGH_PLAYERS), ROW * 5);
+		place(feature("Rag Timer", () -> cfg().ragTimer, v -> cfg().ragTimer = v, Section.RAG_TIMER), ROW * 6);
+		place(toggle(left, featureWidth(), "Announce Rare Drops", () -> cfg().announceRareDrops,
+			v -> cfg().announceRareDrops = v), ROW * 7);
+	}
+
+	private void buildRagTimer() {
+		int y = sectionHeader("Rag Timer", () -> cfg().ragTimer, v -> cfg().ragTimer = v);
+		place(toggle(left, "Use 1.8.9 Rag Sound", () -> cfg().ragOldSound, v -> cfg().ragOldSound = v), y);
+		place(toggle(right, "Use Custom Rag Sound", () -> cfg().ragCustomSound, v -> cfg().ragCustomSound = v), y);
+		y += ROW;
+		place(textBox(left, "Custom Sound ID", () -> cfg().ragCustomSoundId, v -> cfg().ragCustomSoundId = v), y);
+		y += ROW;
+		place(new DoubleSlider(left, columnWidth, "Custom Volume", 0, 4, 0.1,
+			() -> cfg().ragCustomSoundVolume, v -> cfg().ragCustomSoundVolume = v, ""), y);
+		place(new DoubleSlider(right, columnWidth, "Custom Pitch", 0.5, 2, 0.05,
+			() -> cfg().ragCustomSoundPitch, v -> cfg().ragCustomSoundPitch = v, ""), y);
+		y += ROW;
+		place(ThemedButton.builder(Component.literal("Move Rag HUD"), button ->
+			minecraft.gui.setScreen(new HudEditorScreen(this)))
+			.bounds(left, 0, featureWidth(), 20).build(), y);
 	}
 
 	private void buildChatMacros() {
@@ -430,6 +465,7 @@ public final class RaTAddonConfigScreen extends Screen {
 	}
 
 	private void buildDungeon() {
+		if (section == Section.DUNGEON_SECRETS) { buildDungeonSecrets(); return; }
 		if (section == Section.ICE_SPRAY) {
 			buildIceSpray();
 			return;
@@ -455,6 +491,20 @@ public final class RaTAddonConfigScreen extends Screen {
 		place(feature("Storm", () -> cfg().stormEnabled, v -> cfg().stormEnabled = v, Section.STORM), y);
 		y += ROW;
 		place(feature("Relics", () -> cfg().kittyRelics, v -> cfg().kittyRelics = v, Section.RELICS), y);
+		y += ROW;
+		place(feature("Secret Highlights", () -> cfg().dungeonSecretHighlights,
+			v -> cfg().dungeonSecretHighlights = v, Section.DUNGEON_SECRETS), y);
+	}
+
+	private void buildDungeonSecrets() {
+		int y = sectionHeader("Secret Highlights", () -> cfg().dungeonSecretHighlights,
+			v -> cfg().dungeonSecretHighlights = v);
+		place(enumButton(left, "Display", DungeonSecrets.Style.values(),
+			() -> cfg().dungeonSecretHighlightStyle, v -> cfg().dungeonSecretHighlightStyle = v), y);
+		place(toggle(right, "Click / Pickup Sound", () -> cfg().dungeonSecretClickSound,
+			v -> cfg().dungeonSecretClickSound = v), y);
+		place(toggle(left, "Locked Chest Sound", () -> cfg().dungeonSecretLockedSound,
+			v -> cfg().dungeonSecretLockedSound = v), y + ROW);
 	}
 
 	private void buildRelics() {
@@ -524,7 +574,8 @@ public final class RaTAddonConfigScreen extends Screen {
 		if (section == Section.KUUDRA_SUPPLY_SWAP) { buildKuudraSupplySwap(); return; }
 		if (section == Section.KITTY_FIXES) { buildKittyFixes(); return; }
 		if (section == Section.KUUDRA_DISTANCE) { buildKuudraDistance(); return; }
-		if (section == Section.KUUDRA_HITBOX) { buildKuudraHitbox(); return; }
+        if (section == Section.KUUDRA_HITBOX) { buildKuudraHitbox(); return; }
+        if (section == Section.KITTY_STUN) { buildKittyStun(); return; }
 		int y = 0;
 		place(feature("Rend Macro", () -> cfg().rendMacro, v -> cfg().rendMacro = v, Section.REND), y);
 		y += ROW;
@@ -543,7 +594,10 @@ public final class RaTAddonConfigScreen extends Screen {
 		place(feature("Kuudra Distance", () -> cfg().kuudraDistance, v -> cfg().kuudraDistance = v,
 			Section.KUUDRA_DISTANCE), y);
 		y += ROW;
-		place(feature("Kuudra Hitbox", () -> cfg().kuudraHitbox,
+        place(feature("Stun", () -> cfg().kittyStun, v -> cfg().kittyStun = v,
+            Section.KITTY_STUN), y);
+        y += ROW;
+        place(feature("Kuudra Hitbox", () -> cfg().kuudraHitbox,
 			v -> cfg().kuudraHitbox = v, Section.KUUDRA_HITBOX), y);
 	}
 
@@ -571,7 +625,61 @@ public final class RaTAddonConfigScreen extends Screen {
 		labels.add(new Label(label, left + 4, y + 4, ACCENT));
 	}
 
-	private void buildKuudraDistance() {
+    private void buildKittyStun() {
+        int y = sectionHeader("Stun", () -> cfg().kittyStun, v -> cfg().kittyStun = v);
+        place(toggle(left, "Auto open shop", () -> cfg().kittyStunAutoOpenShop,
+            v -> cfg().kittyStunAutoOpenShop = v), y);
+        place(toggle(right, "Show shop area", () -> cfg().kittyStunShopArea,
+            v -> cfg().kittyStunShopArea = v), y);
+        y += ROW;
+        place(toggle(left, "Shop waypoint", () -> cfg().kittyStunShopWaypoint,
+            v -> cfg().kittyStunShopWaypoint = v), y);
+        place(toggle(right, "Auto close shop", () -> cfg().kittyStunAutoCloseShop,
+            v -> cfg().kittyStunAutoCloseShop = v), y);
+        y += ROW;
+        place(toggle(left, "Shop aim assist", () -> cfg().kittyStunShopAimAssist,
+            v -> cfg().kittyStunShopAimAssist = v), y);
+        place(new DoubleSlider(right, columnWidth, "Shop aim FOV", 5, 180, 1,
+            () -> cfg().kittyStunShopAimFov, v -> cfg().kittyStunShopAimFov = v, "°"), y);
+        y += ROW;
+        place(new DoubleSlider(left, columnWidth, "Shop aim strength", 0.01, 1, 0.01,
+            () -> cfg().kittyStunShopAimStrength, v -> cfg().kittyStunShopAimStrength = v, ""), y);
+        y += ROW;
+        place(toggle(left, "Auto shop cursor", () -> cfg().kittyStunAutoCursor,
+            v -> cfg().kittyStunAutoCursor = v), y);
+        place(toggle(right, "No blindness", () -> cfg().kittyStunNoBlind,
+            v -> cfg().kittyStunNoBlind = v), y);
+        y += ROW;
+        place(toggle(left, "Stun waypoint", () -> cfg().kittyStunWaypoint,
+            v -> cfg().kittyStunWaypoint = v), y);
+        place(new IntegerSlider(right, columnWidth, "Pod 0/1/2", 0, 2,
+            () -> cfg().kittyStunPod, v -> cfg().kittyStunPod = v, ""), y);
+        y += ROW;
+        place(toggle(left, "Stun aim assist", () -> cfg().kittyStunAimAssist,
+            v -> cfg().kittyStunAimAssist = v), y);
+        place(new DoubleSlider(right, columnWidth, "Stun aim FOV", 5, 180, 1,
+            () -> cfg().kittyStunAimFov, v -> cfg().kittyStunAimFov = v, "°"), y);
+        y += ROW;
+        place(new DoubleSlider(left, columnWidth, "Stun aim strength", 0.01, 1, 0.01,
+            () -> cfg().kittyStunAimStrength, v -> cfg().kittyStunAimStrength = v, ""), y);
+        y += ROW;
+        place(toggle(left, "Auto Pickobulus", () -> cfg().kittyStunAutoPickobulus,
+            v -> cfg().kittyStunAutoPickobulus = v), y);
+        place(toggle(right, "Early Pickobulus", () -> cfg().kittyStunEarlyPicko,
+            v -> cfg().kittyStunEarlyPicko = v), y);
+        y += ROW;
+        place(toggle(left, "Auto stun", () -> cfg().kittyAutoStun,
+            v -> cfg().kittyAutoStun = v), y);
+        place(new IntegerSlider(right, columnWidth, "Ether delay", 0, 5,
+            () -> cfg().kittyStunEtherDelay, v -> cfg().kittyStunEtherDelay = v, " t"), y);
+        y += ROW;
+        place(toggle(left, "Stun server ticks", () -> cfg().kittyStunServerTicks,
+            v -> cfg().kittyStunServerTicks = v), y);
+        place(toggle(right, "Shop aim left only", () -> cfg().kittyStunShopOnlyLeft,
+            v -> cfg().kittyStunShopOnlyLeft = v), y);
+    }
+
+    private void buildKuudraDistance() {
 		int y = sectionHeader("Kuudra Distance", () -> cfg().kuudraDistance, v -> cfg().kuudraDistance = v);
 		place(new DoubleSlider(left, columnWidth, "Green min distance", 0, 30, .5,
 			() -> cfg().boneMinDistance, v -> cfg().boneMinDistance = v, "m"), y);
@@ -810,6 +918,7 @@ public final class RaTAddonConfigScreen extends Screen {
 	private void buildMining() {
 		if (section == Section.MINESHAFT_ESP) { buildMineshaftEsp(); return; }
 		if (section == Section.PING_OFFSET_MINER) { buildPingOffsetMiner(); return; }
+		if (section == Section.GEMSTONE_NUKER) { buildGemstoneNuker(); return; }
 		if (section == Section.LITTLEFOOT) { buildLittlefoot(); return; }
 		if (section == Section.PICKAXE_ABILITY) { buildPickaxeAbility(); return; }
 		if (section == Section.WILL_O_WISP) { buildWillOWisp(); return; }
@@ -823,12 +932,35 @@ public final class RaTAddonConfigScreen extends Screen {
 			v -> cfg().noGemstoneDesync = v), ROW * 3);
 		place(feature("Ping Offset Miner", () -> cfg().pingOffsetMiner,
 			v -> cfg().pingOffsetMiner = v, Section.PING_OFFSET_MINER), ROW * 4);
+		place(feature("Gemstone Nuker", GemstoneNuker::isEnabled,
+			GemstoneNuker::setEnabled, Section.GEMSTONE_NUKER), ROW * 5);
 		place(feature("Littlefoot Detection", () -> cfg().littlefootDetection,
-			v -> cfg().littlefootDetection = v, Section.LITTLEFOOT), ROW * 5);
+			v -> cfg().littlefootDetection = v, Section.LITTLEFOOT), ROW * 6);
 		place(feature("Pickaxe Ability", () -> cfg().pickaxeAbility,
-			v -> cfg().pickaxeAbility = v, Section.PICKAXE_ABILITY), ROW * 6);
+			v -> cfg().pickaxeAbility = v, Section.PICKAXE_ABILITY), ROW * 7);
 		place(feature("Will-o-Wisp", () -> cfg().willOWisp,
-			v -> cfg().willOWisp = v, Section.WILL_O_WISP), ROW * 7);
+			v -> cfg().willOWisp = v, Section.WILL_O_WISP), ROW * 8);
+	}
+
+	private void buildGemstoneNuker() {
+		int y = sectionHeader("Gemstone Nuker", GemstoneNuker::isEnabled, GemstoneNuker::setEnabled);
+		addGroupLabel("Toggle key: Controls > RatAddons Mining", y);
+		place(toggle(left, "Use Pickaxe Ability",
+			() -> cfg().gemstoneNukerUseAbility, v -> cfg().gemstoneNukerUseAbility = v), y + ROW);
+		place(choiceButton(right, "Speed Mode", new String[] {"Auto", "Normal"},
+			() -> cfg().gemstoneNukerSpeedMode, v -> {
+				cfg().gemstoneNukerSpeedMode = v;
+				rebuildWidgets();
+			}), y + ROW);
+		if (cfg().gemstoneNukerSpeedMode == 0) {
+			addGroupLabel("Auto: reads Mining Speed from /tab Stats Widget", y + ROW * 2);
+		} else {
+			place(speedBox(left, "Normal Mining Speed",
+				() -> cfg().gemstoneNukerNormalSpeed, v -> cfg().gemstoneNukerNormalSpeed = v), y + ROW * 2);
+			place(speedBox(right, "Boosted Mining Speed",
+				() -> cfg().gemstoneNukerBoostedSpeed, v -> cfg().gemstoneNukerBoostedSpeed = v), y + ROW * 2);
+			addGroupLabel("Boosted speed is the final value during Mining Speed Boost", y + ROW * 3);
+		}
 	}
 
 	private void buildPickaxeAbility() {
@@ -1153,7 +1285,7 @@ public final class RaTAddonConfigScreen extends Screen {
 			extraHeight += (lastRowCount - 1) * ROW;
 			wrappedRowShifts.put(lastRowY, extraHeight);
 		}
-		for (Label label : labels) maxBottom = Math.max(maxBottom, label.y + wrappedShift(label.y) + 10);
+		for (Label label : labels) maxBottom = Math.max(maxBottom, label.y + wrappedShift(label.y) + font.lineHeight);
 		contentHeight = maxBottom;
 		positionContentWidgets();
 	}
@@ -1311,8 +1443,9 @@ public final class RaTAddonConfigScreen extends Screen {
 		super.extractRenderState(graphics, mouseX, mouseY, delta);
 		for (Label label : labels) {
 			int y = contentTop + label.y + wrappedShift(label.y) - currentScroll();
-			if (y >= contentTop && y + 9 <= contentBottom) {
-				graphics.text(font, Component.literal(label.text), label.x, y, label.color, true);
+			if (y >= contentTop && y + font.lineHeight <= contentBottom) {
+				graphics.text(font, Component.literal(ThemedButton.fit(font, label.text, contentWidth - 8)),
+					label.x, y, label.color, true);
 			}
 		}
 		int max = maxScroll();
@@ -1385,6 +1518,20 @@ public final class RaTAddonConfigScreen extends Screen {
 		box.setHint(Component.literal(name));
 		box.setValue(getter.get());
 		box.setResponder(setter);
+		return box;
+	}
+
+	private EditBox speedBox(int x, String name, IntSupplier getter, IntConsumer setter) {
+		EditBox box = textBox(x, name,
+			() -> getter.getAsInt() > 0 ? Integer.toString(getter.getAsInt()) : "",
+			value -> {
+				if (value.isEmpty()) {
+					setter.accept(0);
+				} else if (value.matches("[0-9]{1,6}")) {
+					setter.accept(Integer.parseInt(value));
+				}
+			});
+		box.setMaxLength(6);
 		return box;
 	}
 
@@ -1476,15 +1623,19 @@ public final class RaTAddonConfigScreen extends Screen {
 		AUTO_CLICKER,
 		CHAT_MACROS,
 		CLICK_THROUGH_PLAYERS,
+		RAG_TIMER,
 		MINESHAFT_ESP,
 		LITTLEFOOT,
 		PICKAXE_ABILITY,
+		GEMSTONE_NUKER,
 		WILL_O_WISP,
 		PING_OFFSET_MINER,
 		DIANA_MOB_HITS,
 		SLAYER_MINIBOSS_SPAWN,
+		SLAYER_BOSS_SOON,
 		SLAYER_BOSS_SPAWN,
 		ICE_SPRAY,
+		DUNGEON_SECRETS,
 		ICE_ANNOUNCE,
 		STORM,
 		RELICS,
@@ -1499,7 +1650,8 @@ public final class RaTAddonConfigScreen extends Screen {
 		KUUDRA_SNEAK,
 		KUUDRA_CROESUS,
 		KUUDRA_SUPPLY_SWAP,
-		KITTY_FIXES
+        KITTY_FIXES,
+        KITTY_STUN
 	}
 
 	private enum Page {

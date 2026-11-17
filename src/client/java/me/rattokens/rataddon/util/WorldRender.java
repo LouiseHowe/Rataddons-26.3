@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.blockentity.BeaconRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 import java.util.List;
 
@@ -33,6 +34,21 @@ public final class WorldRender {
 			throughWalls ? RaTAddonRenderTypes.espLinesNoDepth() : RenderTypes.LINES,
 			(pose, consumer) -> renderBox(pose, consumer, box, color, width));
 		poseStack.popPose();
+	}
+
+	/** Draw a block's voxel-shape edges instead of a full one-block box. */
+	public static void shapeOutline(LevelRenderContext context, VoxelShape shape, Vec3 origin,
+			int color, float width, boolean throughWalls) {
+		Vec3 camera = context.levelState().cameraRenderState.pos;
+		PoseStack stack = context.poseStack();
+		stack.pushPose();
+		stack.translate(origin.x - camera.x, origin.y - camera.y, origin.z - camera.z);
+		context.submitNodeCollector().submitCustomGeometry(stack,
+			throughWalls ? RaTAddonRenderTypes.espLinesNoDepth() : RenderTypes.LINES,
+			(pose, consumer) -> shape.forAllEdges((x1, y1, z1, x2, y2, z2) ->
+				line(pose, consumer, (float) x1, (float) y1, (float) z1,
+					(float) x2, (float) y2, (float) z2, color, width)));
+		stack.popPose();
 	}
 
 	public static void boxOverlay(LevelRenderContext context, AABB box, int color, float width) {

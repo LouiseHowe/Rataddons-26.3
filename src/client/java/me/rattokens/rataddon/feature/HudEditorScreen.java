@@ -50,7 +50,8 @@ public final class HudEditorScreen extends Screen {
 			int bottom = y + (int) Math.ceil(KittyHud.height(slot));
 			boolean hovered = slot == draggingKitty || insideKitty(slot, mouseX, mouseY);
 			graphics.fill(x - 2, y - 2, right + 2, bottom + 1, hovered ? 0x6055AAFF : 0x40000000);
-			KittyHud.draw(graphics, font, slot, Component.literal(slot.preview), width, height, 0xFFFFFFFF);
+			KittyHud.draw(graphics, font, slot, Component.literal(slot.preview), width, height,
+				slot == KittyHud.Slot.RAG_TIMER ? 0xFFFFFF55 : 0xFFFFFFFF);
 			if (hovered) graphics.text(font, Component.literal(slot.label + String.format(" (%.1fx)", slot.setting().scale)),
 				x, bottom + 3, 0xFF55AAFF, true);
 		}

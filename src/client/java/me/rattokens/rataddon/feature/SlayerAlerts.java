@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
 public final class SlayerAlerts {
     private static final Pattern MINIBOSS = Pattern.compile("^SLAYER MINIBOSS! The (.+?) spawned!$");
     private static final Pattern TIER = Pattern.compile(" (I|II|III|IV|V)$");
+    private static final Pattern PROGRESS = Pattern.compile("(?<!\\d)([\\d,]+)\\s*/\\s*([\\d,]+)(?!\\d)");
     private static final SoundEvent WARNING = SoundEvent.createVariableRangeEvent(
         Identifier.fromNamespaceAndPath(RaTAddonClient.MOD_ID, "warning"));
     private static final long DURATION_MS = 2_500L;
@@ -42,6 +43,9 @@ public final class SlayerAlerts {
     private static final List<Alert> ACTIVE = new ArrayList<>();
     private static boolean bossActive;
     private static boolean questActive;
+    private static String soonQuest = "";
+    private static boolean soonWarned;
+    private static int missingQuestTicks;
 
     private SlayerAlerts() {}
 
@@ -77,9 +81,7 @@ public final class SlayerAlerts {
         long now = System.currentTimeMillis();
         ACTIVE.removeIf(alert -> now >= alert.expiresAt);
         if (!SkyblockLocation.inSkyblock() || client.level == null || client.player == null) {
-            bossActive = false;
-            questActive = false;
-            ACTIVE.clear();
+            clear();
             return;
         }
         List<String> lines = scoreboardLines(client);
@@ -89,6 +91,28 @@ public final class SlayerAlerts {
         boolean nextBossActive = nextQuestActive && lines.stream()
             .anyMatch(line -> line.equalsIgnoreCase("Slay the boss!"));
         var config = RaTAddonClient.CONFIG;
+        if (nextBossActive) {
+            soonQuest = "";
+            soonWarned = false;
+            missingQuestTicks = 0;
+        } else if (nextQuestActive) {
+            missingQuestTicks = 0;
+            if (!questName.equals(soonQuest)) {
+                soonQuest = questName;
+                soonWarned = false;
+            }
+            if (!soonWarned && (config.slayerBossSoonAlert || config.slayerBossSoonSound)
+                && nearBoss(lines, header)) {
+                alert("boss_soon",
+                    List.of(new Line(Component.literal("Boss Soon!")
+                        .withStyle(ChatFormatting.WHITE, ChatFormatting.BOLD), TITLE_SCALE)),
+                    config.slayerBossSoonAlert, config.slayerBossSoonSound);
+                soonWarned = true;
+            }
+        } else if (++missingQuestTicks >= 10) {
+            soonQuest = "";
+            soonWarned = false;
+        }
         if ((config.slayerBossSpawnAlert || config.slayerBossSpawnSound)
             && questActive && !bossActive && nextBossActive) {
             alert("boss",
@@ -98,6 +122,22 @@ public final class SlayerAlerts {
         }
         questActive = nextQuestActive;
         bossActive = nextBossActive;
+    }
+
+    private static boolean nearBoss(List<String> lines, int header) {
+        for (int i = header + 2; i < Math.min(lines.size(), header + 6); i++) {
+            Matcher match = PROGRESS.matcher(lines.get(i));
+            if (!match.find()) continue;
+            try {
+                long current = Long.parseLong(match.group(1).replace(",", ""));
+                long required = Long.parseLong(match.group(2).replace(",", ""));
+                return required > 0 && current <= required
+                    && (double) current / required >= 0.8D;
+            } catch (NumberFormatException ignored) {
+                return false;
+            }
+        }
+        return false;
     }
 
     private static boolean isKnownBoss(String questName) {
@@ -133,9 +173,11 @@ public final class SlayerAlerts {
             long now = System.currentTimeMillis();
             ACTIVE.add(new Alert(id, lines, now, now + DURATION_MS));
         }
-        if (playSound) {
-            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(WARNING, 1.0F, 0.8F));
-        }
+        if (playSound) playWarning();
+    }
+
+    private static void playWarning() {
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(WARNING, 1.0F, 0.8F));
     }
 
     private static void render(GuiGraphicsExtractor graphics) {
@@ -164,6 +206,9 @@ public final class SlayerAlerts {
         ACTIVE.clear();
         questActive = false;
         bossActive = false;
+        soonQuest = "";
+        soonWarned = false;
+        missingQuestTicks = 0;
     }
 
     private record Line(Component text, float scale) {}

@@ -1,0 +1,9 @@
+Rag Timer behavior and wolf-howl.ogg adapted from Blade Addons:
+https://github.com/BladeMasterGabe/blade-addons
+
+Source files:
+https://github.com/BladeMasterGabe/blade-addons/blob/new/src/main/java/blade/addon/features/other/RagDisplay.java
+https://github.com/BladeMasterGabe/blade-addons/blob/new/src/main/resources/assets/blade-addons/sounds/wolf-howl.ogg
+
+Blade Addons is published under CC0-1.0:
+https://github.com/BladeMasterGabe/blade-addons/blob/new/LICENSE

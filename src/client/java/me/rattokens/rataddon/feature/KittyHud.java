@@ -18,6 +18,7 @@ public final class KittyHud {
 		PICKAXE_ABILITY("Pickaxe ability", "§9§lMining Speed Boost: §b42s", 8),
 		PICKAXE_DURATION("Pickaxe duration", "§6§lDUR§f: §e12.00", 20),
 		WISP_TIMER("Will-o-Wisp", "§fWisp: §b300s", 32),
+		RAG_TIMER("Rag timer", "10.00", 80),
 		PICKAXE_POPUP("Pickaxe popup", "Ability Ready!", -50),
 		WISP_POPUP("Wisp popup", "Place Wisp!", -20),
 		LITTLEFOOT_POPUP("Littlefoot popup", "Littlefoot!", 0);

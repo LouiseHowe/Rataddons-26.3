@@ -1,5 +1,8 @@
 {
   "warning": {
     "sounds": ["rataddon:warning"]
+  },
+  "wolf-howl": {
+    "sounds": ["rataddon:wolf-howl"]
   }
 }

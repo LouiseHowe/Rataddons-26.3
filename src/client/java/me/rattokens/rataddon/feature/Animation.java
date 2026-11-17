@@ -128,7 +128,7 @@ public final class Animation {
 	}
 
 	private static boolean isBlockableWeapon(ItemStack itemStack) {
-		return !itemStack.isEmpty() && itemStack.is(ItemTags.WEAPON_ENCHANTABLE);
+		return BlockAnimationSwordCatalog.allows(itemStack);
 	}
 
 	private static boolean isOffhandBlocking() {

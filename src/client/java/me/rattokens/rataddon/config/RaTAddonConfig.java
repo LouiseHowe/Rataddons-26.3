@@ -27,6 +27,9 @@ public final class RaTAddonConfig {
 	public boolean slayerMinibossSpawnSound = false;
 	public boolean slayerBossSpawnAlert = false;
 	public boolean slayerBossSpawnSound = false;
+	public boolean slayerBossSoonAlert = false;
+	public boolean slayerBossSoonSound = false;
+	public boolean announceRareDrops = false;
 	public boolean autoFish = false;
 	public boolean slugFish = false;
 	public boolean fbWalk = false;
@@ -57,6 +60,10 @@ public final class RaTAddonConfig {
 	public boolean dianaMobHits = false;
 	public boolean dianaMobHitsChatSummary = true;
 	public boolean corpseEsp = false;
+	public boolean dungeonSecretHighlights = false;
+	public int dungeonSecretHighlightStyle = 0;
+	public boolean dungeonSecretClickSound = true;
+	public boolean dungeonSecretLockedSound = true;
 	public boolean mineshaftEsp = false;
 	public boolean mineshaftCorpseWaypoints = true;
 	public boolean mineshaftHideLootedCorpses = true;
@@ -94,6 +101,10 @@ public final class RaTAddonConfig {
 	public int wispPopupFinalColor = 4;
 	public int wispPopupStayTicks = 30;
 	public boolean noGemstoneDesync = false;
+	public boolean gemstoneNukerUseAbility = true;
+	public int gemstoneNukerSpeedMode = 0; // 0: Auto, 1: Normal
+	public int gemstoneNukerNormalSpeed = 0;
+	public int gemstoneNukerBoostedSpeed = 0;
 	public boolean pingOffsetMiner = false;
 	public int pingOffsetTickMargin = 0;
 	public boolean pingOffsetOutline = true;
@@ -128,6 +139,12 @@ public final class RaTAddonConfig {
 	public boolean clickThroughPlayers = false;
 	public boolean clickThroughDungeonKuudraOnly = true;
 	public boolean clickThroughPlayerAlpha = false;
+	public boolean ragTimer = false;
+	public boolean ragOldSound = false;
+	public boolean ragCustomSound = false;
+	public String ragCustomSoundId = "minecraft:block.note_block.pling";
+	public double ragCustomSoundVolume = 1.0;
+	public double ragCustomSoundPitch = 1.0;
 	public boolean iceSprayChat = false;
 	public boolean iceAnnounceDungeonOnly = true;
 	public boolean iceAnnouncePartyChat = false;
@@ -211,7 +228,28 @@ public final class RaTAddonConfig {
 	public boolean kittyNoSkyblockMenu = false;
 	public boolean kittyClickThroughGiants = false;
 	public boolean kittyCancelPearlInteract = false;
-	public boolean animationEnabled = false;
+    public boolean kittyStun = false;
+    public boolean kittyStunAutoOpenShop = false;
+    public boolean kittyStunShopArea = false;
+    public boolean kittyStunShopWaypoint = false;
+    public boolean kittyStunShopAimAssist = false;
+    public boolean kittyStunShopOnlyLeft = false;
+    public double kittyStunShopAimFov = 20;
+    public double kittyStunShopAimStrength = 0.5;
+    public boolean kittyStunAutoCloseShop = false;
+    public boolean kittyStunAutoCursor = false;
+    public boolean kittyStunNoBlind = false;
+    public boolean kittyStunWaypoint = false;
+    public boolean kittyStunAimAssist = false;
+    public double kittyStunAimFov = 20;
+    public double kittyStunAimStrength = 0.5;
+    public int kittyStunPod = 1;
+    public boolean kittyStunAutoPickobulus = false;
+    public boolean kittyStunEarlyPicko = false;
+    public boolean kittyAutoStun = false;
+    public int kittyStunEtherDelay = 0;
+    public boolean kittyStunServerTicks = false;
+    public boolean animationEnabled = false;
 	public boolean autoClicker = false;
 	public boolean autoClickBreakBlocks = false;
 	public boolean autoClickStopOnSwap = false;
@@ -304,6 +342,9 @@ public final class RaTAddonConfig {
 	}
 
 	private void sanitize() {
+		if (ragCustomSoundId == null || ragCustomSoundId.isBlank()) ragCustomSoundId = "minecraft:block.note_block.pling";
+		ragCustomSoundVolume = Math.clamp(ragCustomSoundVolume, 0.0, 4.0);
+		ragCustomSoundPitch = Math.clamp(ragCustomSoundPitch, 0.5, 2.0);
 		if (mineshaftMobs == null) mineshaftMobs = new LinkedHashMap<>();
 		mineshaftMobs.replaceAll((key, enabled) -> enabled == null || enabled);
 		if (mineshaftMobColors == null) mineshaftMobColors = new LinkedHashMap<>();
@@ -328,6 +369,9 @@ public final class RaTAddonConfig {
 		wispMaxMarkers = Math.clamp(wispMaxMarkers, 32, 512);
 		if (pingOffsetBlocks == null) pingOffsetBlocks = new LinkedHashMap<>();
 		if (pingOffsetIslands == null) pingOffsetIslands = new LinkedHashMap<>();
+		gemstoneNukerSpeedMode = Math.clamp(gemstoneNukerSpeedMode, 0, 1);
+		gemstoneNukerNormalSpeed = Math.clamp(gemstoneNukerNormalSpeed, 0, 999999);
+		gemstoneNukerBoostedSpeed = Math.clamp(gemstoneNukerBoostedSpeed, 0, 999999);
 		pingOffsetTickMargin = Math.clamp(pingOffsetTickMargin, -10, 10);
 		pingOffsetOutlineWidth = Math.clamp(pingOffsetOutlineWidth, 1, 10);
 		pingOffsetCustomSpeed = Math.clamp(pingOffsetCustomSpeed, 1, 20000);
@@ -351,6 +395,7 @@ public final class RaTAddonConfig {
 		autoKillReturnTicks = Math.clamp(autoKillReturnTicks, 1, 12);
 		hypeHitCount = Math.clamp(hypeHitCount, 1, 10);
 		shortDamageNumbersColor = Math.clamp(shortDamageNumbersColor, 0, 8);
+		dungeonSecretHighlightStyle = Math.clamp(dungeonSecretHighlightStyle, 0, 1);
 		gardenPestEspColor = Math.clamp(gardenPestEspColor, 0, 8);
 		if (hudSettings == null) {
 			hudSettings = new LinkedHashMap<>();

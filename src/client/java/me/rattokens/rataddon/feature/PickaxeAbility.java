@@ -66,6 +66,30 @@ public final class PickaxeAbility {
 			(graphics, delta) -> render(graphics));
 	}
 
+	/** Cooldown tracking stays active even when its HUD is hidden. */
+	public static boolean readyForAutoUse() {
+		return castMs == 0 || System.currentTimeMillis() - castMs >= cooldownMs;
+	}
+
+	public static boolean miningSpeedBoostActive() {
+		return "Mining Speed Boost".equals(abilityName) && castMs > 0
+			&& System.currentTimeMillis() - castMs < durationMs;
+	}
+
+	public static boolean hasSupportedAbility(ItemStack stack) {
+		String search = itemSearchText(stack);
+		for (String name : NAMES) {
+			if (search.contains(name.toUpperCase(Locale.ROOT))) return true;
+		}
+		return false;
+	}
+
+	/** Preserve the held tool and click time for the existing chat-confirmed cooldown calculation. */
+	public static void noteAutoUse(ItemStack stack) {
+		clickedStack = stack.copy();
+		clickedAtMs = System.currentTimeMillis();
+	}
+
 	private static boolean miningIsland() {
 		return switch (LocationManager.currentArea()) {
 			case GOLD_MINE, DEEP_CAVERNS, DWARVEN_MINES, CRYSTAL_HOLLOWS, MINESHAFT -> true;

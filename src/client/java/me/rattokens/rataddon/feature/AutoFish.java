@@ -1,6 +1,7 @@
 package me.rattokens.rataddon.feature;
 
 import me.rattokens.rataddon.util.PhysicalInput;
+import me.rattokens.rataddon.util.HumanRotation;
 import me.rattokens.rataddon.RaTAddonClient;
 import me.rattokens.rataddon.util.ModUtils;
 import me.rattokens.rataddon.util.SkyblockItem;
@@ -24,6 +25,8 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.Objects;
 import java.util.concurrent.Executors;
@@ -57,9 +60,12 @@ public final class AutoFish {
 	private static boolean hypeFacingGround;
 	private static int autoKillSequenceId;
 	private static FbWalkPhase fbWalkPhase = FbWalkPhase.IDLE;
-	private static boolean fbWalkNextLeft = true;
+	private static Vec3 fbWalkCastPoint;
 	private static long fbWalkEndsAt;
 	private static long nextFbWalkAt;
+	private static long fbWalkClientTick;
+	private static long fbWalkPauseStartedTick;
+	private static long fbWalkLastAimNanos;
 
 	private AutoFish() {
 	}
@@ -117,6 +123,7 @@ public final class AutoFish {
 		stopFbWalk();
 		state = FishingState.NORMAL;
 		fluidEnteredTime = 0L;
+		fbWalkCastPoint = null;
 		goldState = GoldState.NOT_FOUND;
 		retryCount = 0;
 		entityWasHooked = false;
@@ -133,9 +140,10 @@ public final class AutoFish {
 	public static void stopFbWalk() {
 		releaseFbWalkKeys();
 		fbWalkPhase = FbWalkPhase.IDLE;
-		fbWalkNextLeft = true;
 		fbWalkEndsAt = 0L;
 		nextFbWalkAt = 0L;
+		fbWalkPauseStartedTick = 0L;
+		fbWalkLastAimNanos = 0L;
 	}
 
 	private static void releaseFbWalkKeys() {
@@ -146,6 +154,7 @@ public final class AutoFish {
 	}
 
 	private static void tick(Minecraft client) {
+		fbWalkClientTick++;
 		LocalPlayer player = client.player;
 		if (player == null || client.level == null || !RaTAddonClient.CONFIG.autoFish) {
 			stopFbWalk();
@@ -453,6 +462,7 @@ public final class AutoFish {
 		state = FishingState.WAITING;
 		lastCastTime = ModUtils.now();
 		fluidEnteredTime = 0L;
+		fbWalkCastPoint = null;
 		entityWasHooked = false;
 	}
 
@@ -463,24 +473,29 @@ public final class AutoFish {
 		}
 		if (fbWalkPhase != FbWalkPhase.IDLE) {
 			if (player.fishing == null || !isFishingRod(player.getMainHandItem())
-				|| physicalDown(client.options.keyLeft) || physicalDown(client.options.keyRight)
-				|| ModUtils.now() >= fbWalkEndsAt) finishFbWalk();
+				|| physicalDown(client.options.keyLeft) || physicalDown(client.options.keyRight)) {
+				finishFbWalk();
+			} else if (fbWalkPhase == FbWalkPhase.PAUSE) {
+				tickFbWalkPause();
+			} else if (ModUtils.now() >= fbWalkEndsAt) {
+				advanceFbWalk();
+			}
 			return;
 		}
-		if (player.fishing == null || !isFishingRod(player.getMainHandItem())) return;
+		if (player.fishing == null || !isFishingRod(player.getMainHandItem()) || fbWalkCastPoint == null) return;
 
 		if (nextFbWalkAt == 0L) scheduleFbWalk();
 		if (ModUtils.now() < nextFbWalkAt
 			|| physicalDown(client.options.keyLeft) || physicalDown(client.options.keyRight)
 			|| physicalDown(client.options.keyShift)) return;
-		fbWalkPhase = fbWalkNextLeft ? FbWalkPhase.LEFT : FbWalkPhase.RIGHT;
-		fbWalkNextLeft = !fbWalkNextLeft;
-		fbWalkEndsAt = ModUtils.now() + 500L;
+		fbWalkPhase = FbWalkPhase.LEFT;
+		fbWalkEndsAt = ModUtils.now() + 250L;
+		fbWalkLastAimNanos = System.nanoTime();
 		nextFbWalkAt = 0L;
 		holdFbWalkKeys();
 	}
 
-	/** Reasserts movement immediately before KeyboardInput samples KeyMapping state. */
+	/** Reasserts both movement keys immediately before KeyboardInput samples them. */
 	public static void holdFbWalkKeys() {
 		if (fbWalkPhase == FbWalkPhase.IDLE) return;
 		LocalPlayer player = CLIENT.player;
@@ -490,20 +505,61 @@ public final class AutoFish {
 			return;
 		}
 		if (player.fishing == null || !isFishingRod(player.getMainHandItem())
-			|| physicalDown(CLIENT.options.keyLeft) || physicalDown(CLIENT.options.keyRight)
-			|| ModUtils.now() >= fbWalkEndsAt) {
+			|| physicalDown(CLIENT.options.keyLeft) || physicalDown(CLIENT.options.keyRight)) {
 			finishFbWalk();
 			return;
 		}
-		CLIENT.options.keyShift.setDown(true);
-		if (fbWalkPhase == FbWalkPhase.LEFT) CLIENT.options.keyLeft.setDown(true);
-		else CLIENT.options.keyRight.setDown(true);
+		if ((fbWalkPhase == FbWalkPhase.LEFT || fbWalkPhase == FbWalkPhase.RIGHT)
+			&& ModUtils.now() >= fbWalkEndsAt) advanceFbWalk();
+		if (fbWalkPhase == FbWalkPhase.IDLE) return;
+
+		CLIENT.options.keyShift.setDown(fbWalkPhase != FbWalkPhase.PAUSE
+			|| physicalDown(CLIENT.options.keyShift));
+		CLIENT.options.keyLeft.setDown(fbWalkPhase == FbWalkPhase.LEFT);
+		CLIENT.options.keyRight.setDown(fbWalkPhase == FbWalkPhase.RIGHT);
+	}
+
+	/** Keeps the camera on the initial hook position throughout the walk, once per rendered frame. */
+	public static void onFrame() {
+		if (fbWalkPhase == FbWalkPhase.IDLE || fbWalkCastPoint == null || HumanRotation.isRotating()) return;
+		LocalPlayer player = CLIENT.player;
+		if (player == null || player.fishing == null || CLIENT.level == null || CLIENT.gui.screen() != null) return;
+		long now = System.nanoTime();
+		float seconds = Math.clamp((now - fbWalkLastAimNanos) / 1_000_000_000.0F, 0.0F, 0.05F);
+		fbWalkLastAimNanos = now;
+		float[] target = HumanRotation.look(fbWalkCastPoint, player.getEyePosition());
+		float yawStep = Math.clamp(Mth.wrapDegrees(target[0] - player.getYRot()), -90.0F * seconds, 90.0F * seconds);
+		float pitchStep = Math.clamp(target[1] - player.getXRot(), -60.0F * seconds, 60.0F * seconds);
+		HumanRotation.applyGcd(player.getYRot() + yawStep, player.getXRot() + pitchStep);
+	}
+
+	private static void tickFbWalkPause() {
+		if (fbWalkClientTick - fbWalkPauseStartedTick < 10L) return;
+		fbWalkPhase = FbWalkPhase.RIGHT;
+		fbWalkEndsAt = ModUtils.now() + 250L;
+		holdFbWalkKeys();
+	}
+
+	private static void advanceFbWalk() {
+		if (fbWalkPhase == FbWalkPhase.LEFT) {
+			fbWalkPhase = FbWalkPhase.PAUSE;
+			fbWalkEndsAt = 0L;
+			fbWalkPauseStartedTick = fbWalkClientTick;
+			fbWalkLastAimNanos = System.nanoTime();
+			CLIENT.options.keyLeft.setDown(physicalDown(CLIENT.options.keyLeft));
+			CLIENT.options.keyRight.setDown(physicalDown(CLIENT.options.keyRight));
+			CLIENT.options.keyShift.setDown(physicalDown(CLIENT.options.keyShift));
+		} else {
+			finishFbWalk();
+		}
 	}
 
 	private static void finishFbWalk() {
 		releaseFbWalkKeys();
 		fbWalkPhase = FbWalkPhase.IDLE;
 		fbWalkEndsAt = 0L;
+		fbWalkPauseStartedTick = 0L;
+		fbWalkLastAimNanos = 0L;
 		scheduleFbWalk();
 	}
 
@@ -520,7 +576,10 @@ public final class AutoFish {
 	private static void trackFluidEntry(LocalPlayer player) {
 		if (fluidEnteredTime != 0L || player.fishing == null || CLIENT.level == null) return;
 		BlockState block = CLIENT.level.getBlockState(player.fishing.blockPosition());
-		if (block.is(Blocks.WATER) || block.is(Blocks.LAVA)) fluidEnteredTime = ModUtils.now();
+		if (block.is(Blocks.WATER) || block.is(Blocks.LAVA)) {
+			fluidEnteredTime = ModUtils.now();
+			fbWalkCastPoint = player.fishing.position();
+		}
 	}
 
 	private static boolean readyToReel() {
@@ -613,6 +672,7 @@ public final class AutoFish {
 	private enum FbWalkPhase {
 		IDLE,
 		LEFT,
+		PAUSE,
 		RIGHT
 	}
 

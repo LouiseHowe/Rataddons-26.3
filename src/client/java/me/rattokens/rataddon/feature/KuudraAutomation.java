@@ -32,7 +32,7 @@ public final class KuudraAutomation {
 	public static boolean beforeUseItem(Player player, InteractionHand hand) {
 		Minecraft client = Minecraft.getInstance();
 		if (supplyPearlBypass || !RaTAddonClient.CONFIG.supplySwap || hand != InteractionHand.MAIN_HAND
-			|| player != client.player || KuudraState.phase != KuudraState.Phase.SUPPLIES
+			|| player != client.player || !isSupplyPhase()
 			|| !isElleSupplies(player.getItemInHand(hand))) return false;
 		int pearl = AutomationItems.hotbar(stack -> stack.is(Items.ENDER_PEARL));
 		if (pearl < 0 || client.gameMode == null) return false;
@@ -46,9 +46,20 @@ public final class KuudraAutomation {
 		return true;
 	}
 
+	public static boolean isSwappingSupply() {
+		return supplyPearlBypass;
+	}
+
+	private static boolean isSupplyPhase() {
+		return KuudraState.phase == KuudraState.Phase.SUPPLIES
+			|| (KuudraState.phase == KuudraState.Phase.NONE && KuudraState.kuudra());
+	}
+
 	private static boolean isElleSupplies(ItemStack stack) {
 		return AutomationItems.nameContains(stack, "elle's supplies")
-			|| AutomationItems.idContains(stack, "ELLE_SUPPLIES");
+			|| AutomationItems.nameContains(stack, "elle’s supplies")
+			|| AutomationItems.idContains(stack, "ELLE_SUPPLIES")
+			|| AutomationItems.idContains(stack, "FUEL_CELL");
 	}
 
 	private static void tick(Minecraft client) {

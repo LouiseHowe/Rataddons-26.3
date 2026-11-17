@@ -220,7 +220,7 @@ public final class PingOffsetMiner {
 			+ RaTAddonClient.CONFIG.pingOffsetTickMargin);
 	}
 
-	private static boolean isMiningTool(Minecraft client, ItemStack stack) {
+	public static boolean isMiningTool(Minecraft client, ItemStack stack) {
 		if (stack.isEmpty()) return false;
 		Item.TooltipContext context = Item.TooltipContext.of(client.player.registryAccess());
 		for (var line : stack.getTooltipLines(context, client.player, TooltipFlag.ADVANCED)) {
@@ -282,6 +282,12 @@ public final class PingOffsetMiner {
 
 	private static double readMiningSpeed(Minecraft client) {
 		if (RaTAddonClient.CONFIG.pingOffsetCustomStats) return RaTAddonClient.CONFIG.pingOffsetCustomSpeed;
+		return readTabMiningSpeed(client);
+	}
+
+	/** Live Mining Speed from SkyBlock's tab stats, independent of the POM feature toggle. */
+	public static double readTabMiningSpeed(Minecraft client) {
+		if (client.getConnection() == null) return -1;
 		for (PlayerInfo info : client.getConnection().getListedOnlinePlayers()) {
 			if (info.getTabListDisplayName() == null) continue;
 			Matcher match = SPEED.matcher(info.getTabListDisplayName().getString());

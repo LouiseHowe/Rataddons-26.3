@@ -1,15 +1,21 @@
 package me.rattokens.rataddon.mixin;
 
 import com.llamalad7.mixinextras.sugar.Local;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import me.rattokens.rataddon.RaTAddonClient;
 import me.rattokens.rataddon.feature.AutoFish;
 import me.rattokens.rataddon.feature.DianaMobHits;
+import me.rattokens.rataddon.feature.DungeonSecrets;
 import me.rattokens.rataddon.feature.IceSprayTracker;
+import me.rattokens.rataddon.feature.KittyStun;
 import me.rattokens.rataddon.feature.RendMacro;
+import me.rattokens.rataddon.feature.RagTimer;
 import me.rattokens.rataddon.feature.Storm;
 import me.rattokens.rataddon.util.LocationManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundAnimatePacket;
@@ -25,7 +31,11 @@ import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
 import net.minecraft.network.protocol.game.ClientboundSetObjectivePacket;
 import net.minecraft.network.protocol.game.ClientboundSetPlayerTeamPacket;
+import net.minecraft.network.protocol.game.ClientboundSoundPacket;
+import net.minecraft.network.protocol.game.ClientboundSoundEntityPacket;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -34,6 +44,39 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ClientPacketListener.class)
 public abstract class ClientPacketListenerMixin {
+	@WrapOperation(method = "handleTakeItemEntity",
+		at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/ItemEntity;getItem()Lnet/minecraft/world/item/ItemStack;"))
+	private ItemStack rataddon$secretPickup(ItemEntity entity, Operation<ItemStack> original) {
+		ItemStack stack = original.call(entity);
+		DungeonSecrets.onItemPickup(entity);
+		return stack;
+	}
+
+	// Some item pickups arrive as nearby entity deletions instead of a take-item packet.
+	@WrapOperation(method = "lambda$handleRemoveEntities$0",
+		at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getEntity(I)Lnet/minecraft/world/entity/Entity;"))
+	private Entity rataddon$secretPickupFallback(ClientLevel level, int id, Operation<Entity> original) {
+		Entity entity = original.call(level, id);
+		Minecraft client = Minecraft.getInstance();
+		if (entity instanceof ItemEntity item && client.player != null
+			&& client.player.distanceToSqr(item) < 25.0) DungeonSecrets.onItemPickup(item);
+		return entity;
+	}
+
+	@Inject(method = "handleSoundEvent", at = @At(value = "INVOKE",
+		target = "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/network/PacketProcessor;)V",
+		shift = At.Shift.AFTER), cancellable = true)
+	private void rataddon$ragSound(ClientboundSoundPacket packet, CallbackInfo ci) {
+		if (RagTimer.onSound(packet.getSound().value(), packet.getVolume(), packet.getPitch())) ci.cancel();
+	}
+
+	@Inject(method = "handleSoundEntityEvent", at = @At(value = "INVOKE",
+		target = "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/network/PacketProcessor;)V",
+		shift = At.Shift.AFTER), cancellable = true)
+	private void rataddon$ragEntitySound(ClientboundSoundEntityPacket packet, CallbackInfo ci) {
+		if (RagTimer.onSound(packet.getSound().value(), packet.getVolume(), packet.getPitch())) ci.cancel();
+	}
+
 	@Inject(method = "handlePlayerInfoUpdate", at = @At("TAIL"))
 	private void rataddon$locationPlayerInfo(ClientboundPlayerInfoUpdatePacket packet, CallbackInfo ci) {
 		LocationManager.handlePlayerInfo(packet);
@@ -71,15 +114,27 @@ public abstract class ClientPacketListenerMixin {
 	private void rataddon$dianaEvent(ClientboundEntityEventPacket packet, CallbackInfo ci) {
 		DianaMobHits.onEntityEvent(packet);
 	}
-	@Inject(method = "handleOpenScreen(Lnet/minecraft/network/protocol/game/ClientboundOpenScreenPacket;)V", at = @At("HEAD"))
+	@Inject(method = "handleOpenScreen(Lnet/minecraft/network/protocol/game/ClientboundOpenScreenPacket;)V", at = @At("HEAD"), cancellable = true)
 	private void rataddon$handleOpenScreen(ClientboundOpenScreenPacket packet, CallbackInfo ci) {
-		Storm.handleScreen(packet);
+        Storm.handleScreen(packet);
+        if (KittyStun.closeShop(packet)) {
+            if (Minecraft.getInstance().getConnection() != null)
+                Minecraft.getInstance().getConnection().send(new net.minecraft.network.protocol.game.ServerboundContainerClosePacket(packet.getContainerId()));
+            ci.cancel();
+            return;
+        }
 		RendMacro.openScreen(packet);
 	}
 
-	@Inject(method = "handleMovePlayer(Lnet/minecraft/network/protocol/game/ClientboundPlayerPositionPacket;)V", at = @At("TAIL"))
+    @Inject(method = "handleContainerSetSlot", at = @At("TAIL"))
+    private void rataddon$kittyStunCursor(ClientboundContainerSetSlotPacket packet, CallbackInfo ci) {
+        KittyStun.onSetSlot(packet);
+    }
+
+    @Inject(method = "handleMovePlayer(Lnet/minecraft/network/protocol/game/ClientboundPlayerPositionPacket;)V", at = @At("TAIL"))
 	private void rataddon$handleMovePlayer(ClientboundPlayerPositionPacket packet, CallbackInfo ci) {
-		RendMacro.onPositionChange(packet);
+        RendMacro.onPositionChange(packet);
+        KittyStun.onPositionChange(packet);
 	}
 
 	@Inject(

@@ -1,5 +1,6 @@
 package me.rattokens.rataddon.mixin;
 
+import me.rattokens.rataddon.feature.AutoFish;
 import me.rattokens.rataddon.util.HumanRotation;
 import net.minecraft.client.renderer.GameRenderer;
 import org.spongepowered.asm.mixin.Mixin;
@@ -12,5 +13,6 @@ public class GameRendererMixin {
 	@Inject(method = "render", at = @At("HEAD"))
 	private void rataddon$updateRotation(CallbackInfo ci) {
 		HumanRotation.onFrame();
+		AutoFish.onFrame();
 	}
 }

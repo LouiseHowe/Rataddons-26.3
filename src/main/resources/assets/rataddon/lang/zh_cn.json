@@ -1,5 +1,7 @@
 {
   "key.category.rataddon.autoclicker": "RatAddons 自动点击",
   "key.rataddon.autoclick.left": "自动左键点击",
-  "key.rataddon.autoclick.right": "自动右键点击"
+  "key.rataddon.autoclick.right": "自动右键点击",
+  "key.category.rataddon.mining": "RatAddons 挖矿",
+  "key.rataddon.gemstone_nuker": "切换宝石自动挖掘"
 }
