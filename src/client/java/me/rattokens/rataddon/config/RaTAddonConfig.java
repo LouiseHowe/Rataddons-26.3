@@ -48,6 +48,8 @@ public final class RaTAddonConfig {
 	public int autoKillReturnTicks = 4;
 	public boolean hypeWipe = false;
 	public int hypeHitCount = 1;
+	public boolean hypeMobThreshold = false;
+	public int hypeMobCount = 10;
 	public boolean hideIceSprayParticles = false;
 	public boolean iceHelper = false;
 	public boolean shortDamageNumbers = false;
@@ -101,10 +103,6 @@ public final class RaTAddonConfig {
 	public int wispPopupFinalColor = 4;
 	public int wispPopupStayTicks = 30;
 	public boolean noGemstoneDesync = false;
-	public boolean gemstoneNukerUseAbility = true;
-	public int gemstoneNukerSpeedMode = 0; // 0: Auto, 1: Normal
-	public int gemstoneNukerNormalSpeed = 0;
-	public int gemstoneNukerBoostedSpeed = 0;
 	public boolean pingOffsetMiner = false;
 	public int pingOffsetTickMargin = 0;
 	public boolean pingOffsetOutline = true;
@@ -369,9 +367,6 @@ public final class RaTAddonConfig {
 		wispMaxMarkers = Math.clamp(wispMaxMarkers, 32, 512);
 		if (pingOffsetBlocks == null) pingOffsetBlocks = new LinkedHashMap<>();
 		if (pingOffsetIslands == null) pingOffsetIslands = new LinkedHashMap<>();
-		gemstoneNukerSpeedMode = Math.clamp(gemstoneNukerSpeedMode, 0, 1);
-		gemstoneNukerNormalSpeed = Math.clamp(gemstoneNukerNormalSpeed, 0, 999999);
-		gemstoneNukerBoostedSpeed = Math.clamp(gemstoneNukerBoostedSpeed, 0, 999999);
 		pingOffsetTickMargin = Math.clamp(pingOffsetTickMargin, -10, 10);
 		pingOffsetOutlineWidth = Math.clamp(pingOffsetOutlineWidth, 1, 10);
 		pingOffsetCustomSpeed = Math.clamp(pingOffsetCustomSpeed, 1, 20000);
@@ -394,6 +389,7 @@ public final class RaTAddonConfig {
 		autoKillSwitchTicks = Math.clamp(autoKillSwitchTicks, 0, 10);
 		autoKillReturnTicks = Math.clamp(autoKillReturnTicks, 1, 12);
 		hypeHitCount = Math.clamp(hypeHitCount, 1, 10);
+		hypeMobCount = Math.clamp(hypeMobCount, 1, 30);
 		shortDamageNumbersColor = Math.clamp(shortDamageNumbersColor, 0, 8);
 		dungeonSecretHighlightStyle = Math.clamp(dungeonSecretHighlightStyle, 0, 1);
 		gardenPestEspColor = Math.clamp(gardenPestEspColor, 0, 8);

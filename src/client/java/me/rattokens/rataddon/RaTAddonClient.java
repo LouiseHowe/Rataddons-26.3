@@ -11,7 +11,6 @@ import me.rattokens.rataddon.feature.CorpseEsp;
 import me.rattokens.rataddon.feature.MineshaftEsp;
 import me.rattokens.rataddon.feature.LittlefootDetection;
 import me.rattokens.rataddon.feature.PickaxeAbility;
-import me.rattokens.rataddon.feature.GemstoneNuker;
 import me.rattokens.rataddon.feature.WillOWisp;
 import me.rattokens.rataddon.feature.PingOffsetMiner;
 import me.rattokens.rataddon.feature.DianaMobHits;
@@ -81,7 +80,6 @@ public final class RaTAddonClient implements ClientModInitializer {
 		MineshaftEsp.init();
 		LittlefootDetection.init();
 		PickaxeAbility.init();
-		GemstoneNuker.init();
 		WillOWisp.init();
 		PingOffsetMiner.init();
 		DianaMobHits.init();

@@ -49,12 +49,12 @@ public final class PingOffsetMiner {
 		Map.entry("infested_cobblestone", 5600), Map.entry("brown_terracotta", 5600),
 		Map.entry("terracotta", 5600), Map.entry("smooth_red_sandstone", 5600),
 		Map.entry("packed_ice", 6000),
-		Map.entry("red_stained_glass", 2300), Map.entry("orange_stained_glass", 3000),
+		Map.entry("red_stained_glass", 2500), Map.entry("orange_stained_glass", 3000),
 		Map.entry("light_blue_stained_glass", 3000), Map.entry("lime_stained_glass", 3000),
 		Map.entry("purple_stained_glass", 3000), Map.entry("white_stained_glass", 3000),
-		Map.entry("yellow_stained_glass", 3800), Map.entry("magenta_stained_glass", 4800),
-		Map.entry("black_stained_glass", 5200), Map.entry("blue_stained_glass", 5200),
-		Map.entry("brown_stained_glass", 5200), Map.entry("green_stained_glass", 5200)
+		Map.entry("yellow_stained_glass", 3500), Map.entry("magenta_stained_glass", 4000),
+		Map.entry("black_stained_glass", 4000), Map.entry("blue_stained_glass", 4000),
+		Map.entry("brown_stained_glass", 4000), Map.entry("green_stained_glass", 4000)
 	);
 
 	private static BlockPos target;

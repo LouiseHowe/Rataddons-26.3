@@ -1,6 +1,6 @@
 # RatAddons
 
-RatAddons is a client-side Fabric mod for Hypixel SkyBlock. Version **2.1.0** brings Kuudra, Dungeon, Mining, Fishing, Diana, rendering, and movable HUD tools into one searchable settings screen.
+RatAddons is a client-side Fabric mod for Hypixel SkyBlock. Version **2.2.0** brings Kuudra, Dungeon, Mining, Fishing, Diana, rendering, and movable HUD tools into one searchable settings screen.
 
 ## Install
 
@@ -8,7 +8,7 @@ RatAddons is a client-side Fabric mod for Hypixel SkyBlock. Version **2.1.0** br
 - Fabric Loader **0.19.5 or newer** and Fabric API for Minecraft 26.3
 - Java **25 or newer**
 
-Download the 26.3 JAR from [RatAddons Releases](https://github.com/LouiseHowe/RatAddons-Releases/releases) when 2.1.0 is published. Put it and Fabric API in your `mods` folder, remove older RatAddons JARs, and start the Fabric profile. The mod ID is `rataddon`.
+Download the 26.3 JAR from [RatAddons Releases](https://github.com/LouiseHowe/RatAddons-Releases/releases) when 2.2.0 is published. Put it and Fabric API in your `mods` folder, remove older RatAddons JARs, and start the Fabric profile. The mod ID is `rataddon`.
 
 ## First steps
 
@@ -38,7 +38,6 @@ Run `/rataddon hud` to move screen HUDs: drag to position, scroll to scale, and 
 - **Corpse ESP** highlights recognized unlooted corpses; **Shaft Announce** shares the current Mineshaft and corpse summary.
 - **Mineshaft ESP** marks corpse spots, fossils, and Mineshaft mobs, with separate visibility options.
 - **No Gemstone Desync** repairs local stained-glass connection updates in supported SkyBlock areas.
-- **Gemstone Nuker** runs only while holding a tool accepted by POM (drill, gauntlet, or pickaxe), smoothly aims at visible stained glass and panes within 3.5 blocks, and mines by holding the normal attack key. Toggle with N (remappable under Controls > RatAddons Mining); optionally use the held tool ability when the Pickaxe Ability cooldown is ready. Auto mode reads Mining Speed from the SkyBlock Tab Stats Widget and accounts for an active Mining Speed Boost. Normal mode takes manually entered base and boosted final Mining Speed values. Both modes adapt the time spent on each gemstone to its strength and start turning toward the next visible target before the predicted break tick. Mining time follows whichever gemstone the held crosshair actually touches during the turn; vanilla resets a block's progress when the crosshair leaves it. Auto mode without that stat, or Normal mode without the required entered speed, keeps normal held-click mining but cannot predict when to switch.
 - **Ping Offset Miner** shows red/green outlines and highlights for supported mining blocks, adjusts the vanilla break-progress overlay, and offers movable tick and Ping/TPS HUDs. Timing follows client mining ticks, Mining Speed, latency, and server TPS; precision mining and Mining Speed Boost are supported. Show Mining Speed in the SkyBlock Tab widget and adjust Tick Margin if needed. This is a timing hint, not an automatic miner.
 - **Pickaxe Ability** estimates ability cooldowns and durations with movable HUDs and alerts; **Will-o-Wisp** tracks placement time and radius; **Littlefoot Detection** alerts once per Mineshaft.
 
@@ -65,8 +64,8 @@ RatAddons checks a release manifest when joining a server and shows a link if a 
 
 ## Build and license
 
-With JDK 25, run `./gradlew clean build` or `gradlew.bat clean build` on Windows. The mod JAR is `build/libs/RatAddons-2.1.0-26.3.jar`; the `-sources.jar` is for source browsing.
+With JDK 25, run `./gradlew clean build` or `gradlew.bat clean build` on Windows. The mod JAR is `build/libs/RatAddons-2.2.0-26.3.jar`; the `-sources.jar` is for source browsing.
 
-The combined 2.1.0 mod is distributed under [GPL-3.0](LICENSE). The earlier CC0 text for RatAddons-origin code is preserved in [LICENSE-CC0-ORIGINAL](LICENSE-CC0-ORIGINAL). Notices and original licenses for adapted [quoi](https://github.com/jcnlk/quoi) and [PingOffsetMiner 26.1](https://github.com/Revvilon/PingOffsetMiner/tree/26.1) code are packed into the JAR.
+The combined 2.2.0 mod is distributed under [GPL-3.0](LICENSE). The earlier CC0 text for RatAddons-origin code is preserved in [LICENSE-CC0-ORIGINAL](LICENSE-CC0-ORIGINAL). Notices and original licenses for adapted [quoi](https://github.com/jcnlk/quoi) and [PingOffsetMiner 26.1](https://github.com/Revvilon/PingOffsetMiner/tree/26.1) code are packed into the JAR.
 
 See [CHANGELOG.md](CHANGELOG.md) for release history.

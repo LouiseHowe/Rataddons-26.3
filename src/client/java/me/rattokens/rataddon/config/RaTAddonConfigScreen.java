@@ -6,7 +6,6 @@ import me.rattokens.rataddon.feature.AutoFish;
 import me.rattokens.rataddon.feature.DungeonSecrets;
 import me.rattokens.rataddon.feature.HudEditorScreen;
 import me.rattokens.rataddon.feature.PingOffsetMiner;
-import me.rattokens.rataddon.feature.GemstoneNuker;
 import me.rattokens.rataddon.feature.MineshaftEsp;
 import me.rattokens.rataddon.feature.WillOWisp;
 import me.rattokens.rataddon.feature.ChatMacrosScreen;
@@ -918,7 +917,6 @@ public final class RaTAddonConfigScreen extends Screen {
 	private void buildMining() {
 		if (section == Section.MINESHAFT_ESP) { buildMineshaftEsp(); return; }
 		if (section == Section.PING_OFFSET_MINER) { buildPingOffsetMiner(); return; }
-		if (section == Section.GEMSTONE_NUKER) { buildGemstoneNuker(); return; }
 		if (section == Section.LITTLEFOOT) { buildLittlefoot(); return; }
 		if (section == Section.PICKAXE_ABILITY) { buildPickaxeAbility(); return; }
 		if (section == Section.WILL_O_WISP) { buildWillOWisp(); return; }
@@ -932,35 +930,12 @@ public final class RaTAddonConfigScreen extends Screen {
 			v -> cfg().noGemstoneDesync = v), ROW * 3);
 		place(feature("Ping Offset Miner", () -> cfg().pingOffsetMiner,
 			v -> cfg().pingOffsetMiner = v, Section.PING_OFFSET_MINER), ROW * 4);
-		place(feature("Gemstone Nuker", GemstoneNuker::isEnabled,
-			GemstoneNuker::setEnabled, Section.GEMSTONE_NUKER), ROW * 5);
 		place(feature("Littlefoot Detection", () -> cfg().littlefootDetection,
-			v -> cfg().littlefootDetection = v, Section.LITTLEFOOT), ROW * 6);
+			v -> cfg().littlefootDetection = v, Section.LITTLEFOOT), ROW * 5);
 		place(feature("Pickaxe Ability", () -> cfg().pickaxeAbility,
-			v -> cfg().pickaxeAbility = v, Section.PICKAXE_ABILITY), ROW * 7);
+			v -> cfg().pickaxeAbility = v, Section.PICKAXE_ABILITY), ROW * 6);
 		place(feature("Will-o-Wisp", () -> cfg().willOWisp,
-			v -> cfg().willOWisp = v, Section.WILL_O_WISP), ROW * 8);
-	}
-
-	private void buildGemstoneNuker() {
-		int y = sectionHeader("Gemstone Nuker", GemstoneNuker::isEnabled, GemstoneNuker::setEnabled);
-		addGroupLabel("Toggle key: Controls > RatAddons Mining", y);
-		place(toggle(left, "Use Pickaxe Ability",
-			() -> cfg().gemstoneNukerUseAbility, v -> cfg().gemstoneNukerUseAbility = v), y + ROW);
-		place(choiceButton(right, "Speed Mode", new String[] {"Auto", "Normal"},
-			() -> cfg().gemstoneNukerSpeedMode, v -> {
-				cfg().gemstoneNukerSpeedMode = v;
-				rebuildWidgets();
-			}), y + ROW);
-		if (cfg().gemstoneNukerSpeedMode == 0) {
-			addGroupLabel("Auto: reads Mining Speed from /tab Stats Widget", y + ROW * 2);
-		} else {
-			place(speedBox(left, "Normal Mining Speed",
-				() -> cfg().gemstoneNukerNormalSpeed, v -> cfg().gemstoneNukerNormalSpeed = v), y + ROW * 2);
-			place(speedBox(right, "Boosted Mining Speed",
-				() -> cfg().gemstoneNukerBoostedSpeed, v -> cfg().gemstoneNukerBoostedSpeed = v), y + ROW * 2);
-			addGroupLabel("Boosted speed is the final value during Mining Speed Boost", y + ROW * 3);
-		}
+			v -> cfg().willOWisp = v, Section.WILL_O_WISP), ROW * 7);
 	}
 
 	private void buildPickaxeAbility() {
@@ -1191,6 +1166,11 @@ public final class RaTAddonConfigScreen extends Screen {
 		place(toggle(left, "HYPE (WIPE)", () -> cfg().hypeWipe, v -> cfg().hypeWipe = v), y);
 		place(new IntegerSlider(right, columnWidth, "HYPE Hit Count", 1, 10, () -> cfg().hypeHitCount,
 			v -> cfg().hypeHitCount = v, ""), y);
+		y += ROW;
+		place(toggle(left, "HYPE Mob Threshold", () -> cfg().hypeMobThreshold,
+			v -> cfg().hypeMobThreshold = v), y);
+		place(new IntegerSlider(right, columnWidth, "HYPE Mob Count", 1, 30, () -> cfg().hypeMobCount,
+			v -> cfg().hypeMobCount = v, ""), y);
 	}
 
 	private int sectionHeader(String name) {
@@ -1627,7 +1607,6 @@ public final class RaTAddonConfigScreen extends Screen {
 		MINESHAFT_ESP,
 		LITTLEFOOT,
 		PICKAXE_ABILITY,
-		GEMSTONE_NUKER,
 		WILL_O_WISP,
 		PING_OFFSET_MINER,
 		DIANA_MOB_HITS,

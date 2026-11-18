@@ -144,7 +144,7 @@ public final class Animation {
 	public static void applyBlockingTransform(PoseStack poseStack, HumanoidArm arm, float attack) {
 		switch (blockMode()) {
 			case V1_7 -> {
-				poseStack.translate((arm == HumanoidArm.RIGHT ? -0.1F : 0.1F), 0.05F, 0.0F);
+				poseStack.translate((arm == HumanoidArm.RIGHT ? -0.1F : 0.1F), 0.0F, 0.0F);
 				applyAttackTransform(poseStack, arm, attack, 0.9F);
 				applyBlockPose(poseStack, arm, 0.0F, 0.0F, 0.0F, -102.25F, 13.365F, 78.05F);
 			}

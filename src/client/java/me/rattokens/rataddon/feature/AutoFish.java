@@ -16,6 +16,8 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.animal.frog.Frog;
 import net.minecraft.world.entity.decoration.ArmorStand;
@@ -58,6 +60,8 @@ public final class AutoFish {
 	private static float preKillPitch;
 	private static float preKillYaw;
 	private static boolean hypeFacingGround;
+	private static boolean hypeThresholdArmed = true;
+	private static boolean hypeThresholdSequence;
 	private static int autoKillSequenceId;
 	private static FbWalkPhase fbWalkPhase = FbWalkPhase.IDLE;
 	private static Vec3 fbWalkCastPoint;
@@ -130,6 +134,8 @@ public final class AutoFish {
 		puddleJumper = null;
 		autoKillPending = false;
 		hypeFacingGround = false;
+		hypeThresholdArmed = true;
+		hypeThresholdSequence = false;
 		autoKillSequenceId++;
 		if (jumpingForAir) {
 			jumpingForAir = false;
@@ -161,6 +167,7 @@ public final class AutoFish {
 			return;
 		}
 		tickFbWalk(client, player);
+		tickHypeMobThreshold(player);
 		if (state == FishingState.WAITING || state == FishingState.BAIT) {
 			trackFluidEntry(player);
 		}
@@ -174,7 +181,8 @@ public final class AutoFish {
 					state = FishingState.WAITING;
 				} else {
 					useRod();
-					autoKillPending = RaTAddonClient.CONFIG.autoKill;
+					autoKillPending = RaTAddonClient.CONFIG.autoKill
+						&& !(RaTAddonClient.CONFIG.hypeWipe && RaTAddonClient.CONFIG.hypeMobThreshold);
 					state = FishingState.DELAYING;
 					lastReelTime = ModUtils.now();
 				}
@@ -219,6 +227,47 @@ public final class AutoFish {
 			useRod();
 			pendingUse = false;
 		}
+	}
+
+	private static void tickHypeMobThreshold(LocalPlayer player) {
+		var config = RaTAddonClient.CONFIG;
+		if (!config.autoKill || !config.hypeWipe || !config.hypeMobThreshold) {
+			hypeThresholdArmed = true;
+			return;
+		}
+		if (nearbyHypeTargets(player) < config.hypeMobCount) {
+			hypeThresholdArmed = true;
+			return;
+		}
+		if (!hypeThresholdArmed || !isFishingRod(player.getMainHandItem())
+				|| (state != FishingState.WAITING && state != FishingState.DELAYING)
+				|| (state == FishingState.WAITING && player.fishing == null)) {
+			return;
+		}
+		hypeThresholdArmed = false;
+		hypeThresholdSequence = true;
+		stopFbWalk();
+		if (state == FishingState.WAITING) {
+			useRod();
+			state = FishingState.DELAYING;
+		}
+		autoKillPending = true;
+		lastReelTime = ModUtils.now();
+	}
+
+	private static int nearbyHypeTargets(LocalPlayer player) {
+		int count = 0;
+		Vec3 eye = player.getEyePosition();
+		for (Entity candidate : CLIENT.level.entitiesForRendering()) {
+			if (!(candidate instanceof LivingEntity mob) || candidate == player
+					|| candidate instanceof Player || candidate instanceof ArmorStand
+					|| !mob.isAlive() || mob.isDeadOrDying() || mob.isRemoved()
+					|| mob.isInvisible() || mob.getHealth() <= 0.0F) {
+				continue;
+			}
+			if (eye.distanceToSqr(mob.getEyePosition()) <= 9.0D) count++;
+		}
+		return count;
 	}
 
 	private static void tickWaiting(LocalPlayer player) {
@@ -347,7 +396,7 @@ public final class AutoFish {
 	private static void startHypeHits() {
 		state = FishingState.AUTO_KILL_HITTING;
 		int sequenceId = ++autoKillSequenceId;
-		int hitCount = RaTAddonClient.CONFIG.hypeHitCount;
+		int hitCount = hypeThresholdSequence ? 1 : RaTAddonClient.CONFIG.hypeHitCount;
 		for (int hit = 0; hit < hitCount; hit++) {
 			boolean lastHit = hit == hitCount - 1;
 			HYPE_EXECUTOR.schedule(() -> CLIENT.execute(() -> {
@@ -363,6 +412,7 @@ public final class AutoFish {
 	}
 
 	private static void beginReturnToRod() {
+		hypeThresholdSequence = false;
 		returnToRodWaitTicks = RaTAddonClient.CONFIG.autoKillReturnTicks;
 		state = FishingState.AUTO_KILL_RETURN;
 	}
