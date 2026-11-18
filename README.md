@@ -66,6 +66,6 @@ RatAddons checks a release manifest when joining a server and shows a link if a 
 
 With JDK 25, run `./gradlew clean build` or `gradlew.bat clean build` on Windows. The mod JAR is `build/libs/RatAddons-2.2.0-26.3.jar`; the `-sources.jar` is for source browsing.
 
-The combined 2.2.0 mod is distributed under [GPL-3.0](LICENSE). The earlier CC0 text for RatAddons-origin code is preserved in [LICENSE-CC0-ORIGINAL](LICENSE-CC0-ORIGINAL). Notices and original licenses for adapted [quoi](https://github.com/jcnlk/quoi) and [PingOffsetMiner 26.1](https://github.com/Revvilon/PingOffsetMiner/tree/26.1) code are packed into the JAR.
+The combined 2.2.0 mod is distributed under [GPL-3.0](LICENSE). The earlier CC0 text for RatAddons-origin code is preserved in [original CC0 text](src/main/resources/licenses/RatAddons-CC0-original.txt). Notices and original licenses for adapted [quoi](https://github.com/jcnlk/quoi) and [PingOffsetMiner 26.1](https://github.com/Revvilon/PingOffsetMiner/tree/26.1) code are packed into the JAR.
 
 See [CHANGELOG.md](CHANGELOG.md) for release history.
